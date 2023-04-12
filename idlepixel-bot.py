@@ -137,7 +137,7 @@ async def main():
                 await connect_to_idlepixel()
             page.on("websocket", on_web_socket)
             if timed_out:
-                handle_disconnect()
+                await handle_disconnect()
             await loop.connect_read_pipe(lambda: asyncio.StreamReaderProtocol(reader), pipe)
             async for line in reader:
                 print(f'Got: {line.decode()!r}')
