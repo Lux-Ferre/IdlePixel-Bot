@@ -6,16 +6,33 @@ from datetime import datetime
 from discord import SyncWebhook
 
 
-IP_USERNAME = (os.environ["IP_USERNAME"])
-IP_PASSWORD = (os.environ["IP_PASSWORD"])
-LBT_DISCORD_HOOK_URL = (os.environ["LBT_DISCORD_HOOK_URL"])
-DH_DISCORD_HOOK_URL = (os.environ["DH_DISCORD_HOOK_URL"])
+def get_env_var(env_var: str):
+    try:
+        return os.environ[env_var]
+    except KeyError:
+        print("Missing environment variable")
+        raise
+
+
+env_consts = {
+    "IP_USERNAME": "",
+    "IP_PASSWORD": "",
+    "TESTING_HOOK_URL": "",
+    "LBT_DISCORD_HOOK_URL": "",
+    "DH_DISCORD_HOOK_URL": ""
+}
+
+for key in env_consts:
+    env_consts[key] = get_env_var(key)
 
 idle_pixel_connected = False
+development_mode = True
+
 global page
 
-lbt_webhook = SyncWebhook.from_url(LBT_DISCORD_HOOK_URL)
-dh_webhook = SyncWebhook.from_url(DH_DISCORD_HOOK_URL)
+lbt_webhook = SyncWebhook.from_url(env_consts["LBT_DISCORD_HOOK_URL"])
+dh_webhook = SyncWebhook.from_url(env_consts["DH_DISCORD_HOOK_URL"])
+testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
 
 def on_web_socket(ws):
@@ -72,8 +89,11 @@ def on_yell(data: str):
 
 
 def log_message(message: str):
-    lbt_webhook.send(message)
-    dh_webhook.send(message)
+    if development_mode:
+        testing_webhook.send(message)
+    else:
+        dh_webhook.send(message)
+        lbt_webhook.send(message)
 
     with open('chat.log', 'a', encoding="utf-8") as the_file:
         the_file.write(message + '\n')
@@ -90,8 +110,8 @@ async def handle_disconnect():
 async def connect_to_idlepixel():
     print("Attempting connection...")
     await page.goto("https://idle-pixel.com/login/")
-    await page.locator('[id=id_username]').fill(IP_USERNAME)
-    await page.locator('[id=id_password]').fill(IP_PASSWORD)
+    await page.locator('[id=id_username]').fill(env_consts["IP_USERNAME"])
+    await page.locator('[id=id_password]').fill(env_consts["IP_PASSWORD"])
     await page.locator("[id=login-submit-button]").click()
     global idle_pixel_connected
     idle_pixel_connected = True
