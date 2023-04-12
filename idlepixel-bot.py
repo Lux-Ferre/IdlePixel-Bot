@@ -91,12 +91,12 @@ def on_yell(data: str):
 def log_message(message: str):
     if development_mode:
         testing_webhook.send(message)
+
+        with open('chat.log', 'a', encoding="utf-8") as the_file:
+            the_file.write(message + '\n')
     else:
         dh_webhook.send(message)
         lbt_webhook.send(message)
-
-    with open('chat.log', 'a', encoding="utf-8") as the_file:
-        the_file.write(message + '\n')
 
 
 async def handle_disconnect():
