@@ -27,7 +27,7 @@ for key in env_consts:
 
 idle_pixel_connected = False
 development_mode = True
-online_mods = []
+online_mods = set()
 
 global page
 
@@ -38,7 +38,7 @@ testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
 def on_web_socket(ws):
     print(f"WebSocket opened: {ws.url}")
-    ws.on("framesent", lambda payload: print(payload))
+    ws.on("framesent", pass)
     ws.on("framereceived", receive_message)
     ws.on("close", handle_disconnect)
 
@@ -99,7 +99,7 @@ async def on_custom(data: str):
     command = split_packet[2]
     content = split_packet[3]
 
-    print(f"'{command}' received message with id '{callback_id}' and content '{content}' from {player}.")
+    # print(f"'{command}' received message with id '{callback_id}' and content '{content}' from {player}.")
 
     if plugin == "interactor":
         await handle_interactor(player, command, content)
@@ -117,7 +117,7 @@ async def handle_interactor(player: str, command: str, content: str):
 async def handle_modmod(player: str, command: str, content: str):
     if command == "HELLO":
         if content == "1:0":
-            online_mods.append(player)
+            online_mods.add(player)
             await send_mod_message(f"MODMOD:MSG:{player} has logged in!")
         elif content == "0:0":
             await send_custom_message(player, "0:0")
