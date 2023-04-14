@@ -38,7 +38,7 @@ testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
 def on_web_socket(ws):
     print(f"WebSocket opened: {ws.url}")
-    ws.on("framesent", on_message_send())
+    ws.on("framesent", on_message_send)
     ws.on("framereceived", receive_message)
     ws.on("close", handle_disconnect)
 
