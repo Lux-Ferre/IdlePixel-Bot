@@ -106,7 +106,7 @@ async def on_custom(data: str):
     else:
         content = None
     if development_mode:
-        print(f"'{plugin}' received '{command}' message with id '{callback_id}' and content '{content}' from {player}.")
+        print(f"'{plugin}' received '{command}' command with id '{callback_id}' and content '{content}' from {player}.")
 
     if plugin == "interactor":
         await handle_interactor(player, command, content, callback_id)
