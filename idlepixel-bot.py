@@ -218,7 +218,7 @@ async def main():
             print('Press CTRL-D to stop')
             reader = asyncio.StreamReader()
             pipe = sys.stdin
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             if not idle_pixel_connected:
                 await connect_to_idlepixel()
             page.on("websocket", on_web_socket)
