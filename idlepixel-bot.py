@@ -26,7 +26,7 @@ for key in env_consts:
     env_consts[key] = get_env_var(key)
 
 idle_pixel_connected = False
-development_mode = True
+development_mode = False
 online_mods = set()
 
 global page
@@ -38,7 +38,7 @@ testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
 def on_web_socket(ws):
     print(f"WebSocket opened: {ws.url}")
-    ws.on("framesent", on_message_send())
+    ws.on("framesent", on_message_send)
     ws.on("framereceived", receive_message)
     ws.on("close", handle_disconnect)
 
@@ -127,6 +127,11 @@ async def handle_modmod(player: str, command: str, content: str):
             await send_custom_message(player, "0:0")
     elif command == "MODCHAT":
         await send_mod_message(f"MODMOD:MSG:{player}: {content}")
+    elif command == "MODLIST":
+        mod_string = "Mod accounts online at last poll "
+        for mod in online_mods:
+            mod_string += f"| {mod}"
+        await send_mod_message(mod_string)
 
 
 async def send_mod_message(content: str):
