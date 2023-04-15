@@ -128,7 +128,11 @@ async def on_custom(data: str):
 async def handle_player_offline(player: str):
     if player in online_mods:
         online_mods.remove(player)
-        await send_mod_message(f"{player} has logged out!")
+        await send_modmod_message(payload=f"{player} has logged out!", command="MSG", player="ALL")
+
+
+async def poll_online_mods():
+    await send_modmod_message(command="HELLO", player="ALL", payload="0:0")
 
 
 async def handle_interactor(player: str, command: str, content: str, callback_id: str):
@@ -146,22 +150,31 @@ async def handle_modmod(player: str, command: str, content: str, callback_id: st
     online_mods.add(player)
     if command == "HELLO":
         if content == "1:0":
-            await send_mod_message(f"{player} has logged in!")
+            await send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
         elif content == "0:0":
             await send_custom_message(player, "0:0")
     elif command == "MODCHAT":
-        await send_mod_message(f"{player}: {content}")
+        await send_modmod_message(payload=f"{player}: {content}", command="MSG", player="ALL")
     elif command == "MODLIST":
         mod_string = "Mod accounts online at last poll"
         for mod in online_mods:
-            mod_string += f" | {mod.capitalize()}"
-        await send_mod_message(mod_string)
+            capital_mod = ""
+            for word in mod.split(" "):
+                capital_mod += f"{word.capitalize()} "
+            mod_string += f" | {capital_mod}"
+        await send_modmod_message(payload=mod_string, command="MSG", player=player)
 
 
-async def send_mod_message(content: str):
-    message = "MODMOD:MSG:" + content
-    for account in online_mods:
-        await send_custom_message(account, message)
+async def send_modmod_message(**kwargs):
+    payload = kwargs.get("payload", None)
+    command = kwargs.get("command", None)
+    player = kwargs.get("player", None)
+    message = f"MODMOD:{command}:{payload}"
+    if player == "ALL":
+        for account in online_mods:
+            await send_custom_message(account, message)
+    else:
+        await send_custom_message(player, message)
 
 
 async def send_custom_message(player: str, content: str):
