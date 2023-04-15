@@ -26,7 +26,7 @@ for key in env_consts:
     env_consts[key] = get_env_var(key)
 
 idle_pixel_connected = False
-development_mode = False
+development_mode = True
 online_mods = set()
 
 global page
@@ -101,34 +101,37 @@ async def on_custom(data: str):
     callback_id = split_packet[0]
     plugin = split_packet[1]
     command = split_packet[2]
-    content = split_packet[3]
+    if len(split_packet) > 3:
+        content = split_packet[3]
+    else:
+        content = None
 
     # print(f"'{command}' received message with id '{callback_id}' and content '{content}' from {player}.")
 
     if plugin == "interactor":
-        await handle_interactor(player, command, content)
+        await handle_interactor(player, command, content, callback_id)
     elif plugin == "MODMOD":
-        await handle_modmod(player, command, content)
+        await handle_modmod(player, command, content, callback_id)
 
 
-async def handle_interactor(player: str, command: str, content: str):
+async def handle_interactor(player: str, command: str, content: str, callback_id: str):
     if command == "echo":
         await send_custom_message(player, content)
     elif command == "chatecho":
         await send_chat_message(player, content)
 
 
-async def handle_modmod(player: str, command: str, content: str):
+async def handle_modmod(player: str, command: str, content: str, callback_id: str):
+    online_mods.add(player)
     if command == "HELLO":
         if content == "1:0":
-            online_mods.add(player)
             await send_mod_message(f"MODMOD:MSG:{player} has logged in!")
         elif content == "0:0":
             await send_custom_message(player, "0:0")
     elif command == "MODCHAT":
         await send_mod_message(f"MODMOD:MSG:{player}: {content}")
     elif command == "MODLIST":
-        mod_string = "Mod accounts online at last poll "
+        mod_string = "MODMOD:MSG:Mod accounts online at last poll "
         for mod in online_mods:
             mod_string += f"| {mod}"
         await send_mod_message(mod_string)
