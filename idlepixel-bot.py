@@ -105,8 +105,8 @@ async def on_custom(data: str):
         content = split_packet[3]
     else:
         content = None
-
-    # print(f"'{command}' received message with id '{callback_id}' and content '{content}' from {player}.")
+    if development_mode:
+        print(f"'{plugin}' received '{command}' message with id '{callback_id}' and content '{content}' from {player}.")
 
     if plugin == "interactor":
         await handle_interactor(player, command, content, callback_id)
@@ -140,7 +140,7 @@ async def handle_modmod(player: str, command: str, content: str, callback_id: st
 async def send_mod_message(content: str):
     message = "MODMOD:MSG:" + content
     for account in online_mods:
-        await send_custom_message(account, content)
+        await send_custom_message(account, message)
 
 
 async def send_custom_message(player: str, content: str):
