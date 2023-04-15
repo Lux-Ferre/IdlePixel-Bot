@@ -125,19 +125,20 @@ async def handle_modmod(player: str, command: str, content: str, callback_id: st
     online_mods.add(player)
     if command == "HELLO":
         if content == "1:0":
-            await send_mod_message(f"MODMOD:MSG:{player} has logged in!")
+            await send_mod_message(f"{player} has logged in!")
         elif content == "0:0":
             await send_custom_message(player, "0:0")
     elif command == "MODCHAT":
-        await send_mod_message(f"MODMOD:MSG:{player}: {content}")
+        await send_mod_message(f"{player}: {content}")
     elif command == "MODLIST":
-        mod_string = "MODMOD:MSG:Mod accounts online at last poll "
+        mod_string = "Mod accounts online at last poll "
         for mod in online_mods:
             mod_string += f"| {mod}"
         await send_mod_message(mod_string)
 
 
 async def send_mod_message(content: str):
+    message = "MODMOD:MSG:" + content
     for account in online_mods:
         await send_custom_message(account, content)
 
