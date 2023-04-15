@@ -97,16 +97,27 @@ def on_yell(data: str):
 
 async def on_custom(data: str):
     [player, data_packet] = data.split("~")
-    split_packet = data_packet.split(":", 3)
-    callback_id = split_packet[0]
-    plugin = split_packet[1]
-    command = split_packet[2]
-    if len(split_packet) > 3:
-        content = split_packet[3]
+
+    if data_packet == "PLAYER_OFFLINE":
+        await handle_player_offline(player)
+
+        callback_id = None
+        plugin = None
+        command = None
+        content = data_packet
     else:
-        content = None
-    if development_mode:
-        print(f"'{plugin}' received '{command}' command with id '{callback_id}' and content '{content}' from {player}.")
+        split_packet = data_packet.split(":", 3)
+        callback_id = split_packet[0]
+        plugin = split_packet[1]
+        command = split_packet[2]
+
+        if len(split_packet) > 3:
+            content = split_packet[3]
+        else:
+            content = None
+
+        if development_mode:
+            print(f"'{plugin}' received '{command}' command with id '{callback_id}' and content '{content}' from {player}.")
 
     if plugin == "interactor":
         await handle_interactor(player, command, content, callback_id)
@@ -114,11 +125,21 @@ async def on_custom(data: str):
         await handle_modmod(player, command, content, callback_id)
 
 
+async def handle_player_offline(player: str):
+    if player in online_mods:
+        online_mods.remove(player)
+        await send_mod_message(f"{player} has logged out!")
+
+
 async def handle_interactor(player: str, command: str, content: str, callback_id: str):
     if command == "echo":
         await send_custom_message(player, content)
     elif command == "chatecho":
         await send_chat_message(player, content)
+    elif command == "relay":
+        recipient = content.split(":")[0]
+        message = content.split(":")[1]
+        await send_custom_message(recipient, message)
 
 
 async def handle_modmod(player: str, command: str, content: str, callback_id: str):
@@ -131,9 +152,9 @@ async def handle_modmod(player: str, command: str, content: str, callback_id: st
     elif command == "MODCHAT":
         await send_mod_message(f"{player}: {content}")
     elif command == "MODLIST":
-        mod_string = "Mod accounts online at last poll "
+        mod_string = "Mod accounts online at last poll"
         for mod in online_mods:
-            mod_string += f"| {mod}"
+            mod_string += f" | {mod.capitalize()}"
         await send_mod_message(mod_string)
 
 
