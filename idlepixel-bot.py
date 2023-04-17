@@ -15,13 +15,12 @@ def get_env_var(env_var: str):
 
 
 cl_args = sys.argv
-dev_flag = cl_args[1]
-if dev_flag == "-d":
-    print("Development mode enabled.")
-    development_mode = True
-else:
-    print("Production mode enabled")
-    development_mode = False
+development_mode = False
+
+for arg in cl_args:
+    if arg == "-d":
+        print("Development mode enabled.")
+        development_mode = True
 
 env_consts = {
     "IP_USERNAME": "",
