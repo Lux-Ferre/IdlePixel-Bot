@@ -14,14 +14,6 @@ def get_env_var(env_var: str):
         raise
 
 
-cl_args = sys.argv
-development_mode = False
-
-for arg in cl_args:
-    if arg == "-d":
-        print("Development mode enabled.")
-        development_mode = True
-
 env_consts = {
     "IP_USERNAME": "",
     "IP_PASSWORD": "",
@@ -35,6 +27,14 @@ for key in env_consts:
 
 idle_pixel_connected = False
 online_mods = set()
+whitelisted_accounts = ["lux", "axe", "luxferre"]
+cl_args = sys.argv
+development_mode = False
+
+for arg in cl_args:
+    if arg == "-d":
+        print("Development mode enabled.")
+        development_mode = True
 
 global page
 
@@ -144,14 +144,25 @@ async def poll_online_mods():
 
 
 async def handle_interactor(player: str, command: str, content: str, callback_id: str):
-    if command == "echo":
-        await send_custom_message(player, content)
-    elif command == "chatecho":
-        await send_chat_message(player, content)
-    elif command == "relay":
-        recipient = content.split(":")[0]
-        message = content.split(":")[1]
-        await send_custom_message(recipient, message)
+    if player in whitelisted_accounts:
+        if command == "echo":
+            await send_custom_message(player, content)
+        elif command == "chatecho":
+            await send_chat_message(player, content)
+        elif command == "relay":
+            recipient = content.split(":")[0]
+            message = content.split(":")[1]
+            await send_custom_message(recipient, message)
+        elif command == "whitelist":
+            whitelisted_accounts.append(content.strip())
+            await send_custom_message(player, f"{content} has been temporarily whitelisted to issue interactor commands.")
+        elif command == "blacklist":
+            whitelisted_accounts.remove(content.strip())
+            await send_custom_message(player, f"{content} has been removed from the interactor whitelist.")
+        else:
+            await send_custom_message(player, f"{command} is not a valid interactor command.")
+    else:
+        await send_custom_message(player, "403: Interactor request denied. Account not approved.")
 
 
 async def handle_modmod(player: str, command: str, content: str, callback_id: str):
