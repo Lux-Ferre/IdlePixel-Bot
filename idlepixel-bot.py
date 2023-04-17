@@ -153,6 +153,8 @@ async def handle_modmod(player: str, command: str, content: str, callback_id: st
             await send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
         elif content == "0:0":
             await send_custom_message(player, "0:0")
+            if player == "luxferre":
+                await poll_online_mods()
     elif command == "MODCHAT":
         await send_modmod_message(payload=f"{player}: {content}", command="MSG", player="ALL")
     elif command == "MODLIST":
@@ -242,9 +244,6 @@ async def main():
                 print(f'Got: {line.decode()!r}')
         else:
             browser.close()
-
-        # await page.locator('[id=chat-area-input]').fill("Playwright test.")
-        # await page.evaluate("Chat.send()")
 
 
 asyncio.run(main())
