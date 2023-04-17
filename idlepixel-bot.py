@@ -14,6 +14,15 @@ def get_env_var(env_var: str):
         raise
 
 
+cl_args = sys.argv
+dev_flag = cl_args[1]
+if dev_flag == "-d":
+    print("Development mode enabled.")
+    development_mode = True
+else:
+    print("Production mode enabled")
+    development_mode = False
+
 env_consts = {
     "IP_USERNAME": "",
     "IP_PASSWORD": "",
@@ -26,7 +35,6 @@ for key in env_consts:
     env_consts[key] = get_env_var(key)
 
 idle_pixel_connected = False
-development_mode = True
 online_mods = set()
 
 global page
@@ -117,7 +125,8 @@ async def on_custom(data: str):
             content = None
 
         if development_mode:
-            print(f"'{plugin}' received '{command}' command with id '{callback_id}' and content '{content}' from {player}.")
+            print(
+                f"'{plugin}' received '{command}' command with id '{callback_id}' and content '{content}' from {player}.")
 
     if plugin == "interactor":
         await handle_interactor(player, command, content, callback_id)
