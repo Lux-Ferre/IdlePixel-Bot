@@ -30,6 +30,9 @@ online_mods = set()
 whitelisted_accounts = ["lux", "axe", "luxferre"]
 cl_args = sys.argv
 development_mode = False
+replace_nadebot = False
+global replace_nadebot
+nadebot_commands = ["!bigbone",  "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp"]
 
 for arg in cl_args:
     if arg == "-d":
@@ -51,7 +54,8 @@ def on_web_socket(ws):
 
 
 def on_message_send(sent_message: str):
-    pass
+    if development_mode:
+        print("Sent: " + sent_message)
 
 
 async def receive_message(raw_message: str):
@@ -66,7 +70,7 @@ async def receive_message(raw_message: str):
         pass
         # print(f"{message_type}: {message_data}")
     elif message_type == "CHAT":
-        on_chat(message_data)
+        await on_chat(message_data)
     elif message_type == "YELL":
         on_yell(message_data)
     elif message_type == "CUSTOM":
@@ -75,7 +79,7 @@ async def receive_message(raw_message: str):
         print(f"{message_type}: {message_data}")
 
 
-def on_chat(data: str):
+async def on_chat(data: str):
     data_split = data.split("~")
     message_data = {
         "username": data_split[0],
@@ -91,6 +95,10 @@ def on_chat(data: str):
     formatted_chat = f'*[{current_time}]* **{message_data["username"]}:** {message_data["message"]} '
 
     log_message(formatted_chat)
+
+    if message_data["message"][0] == "!":
+        await handle_chat_command(player=message_data["username"], message=message_data["message"])
+        print(message_data["message"])
 
 
 def on_yell(data: str):
@@ -133,6 +141,40 @@ async def on_custom(data: str):
         await handle_modmod(player, command, content, callback_id)
 
 
+async def handle_chat_command(player: str, message: str):
+    reply_needed = False
+    split_message = message.split(" ", 1)
+    command = split_message[0]
+    if len(split_message) > 1:
+        payload = split_message[1]
+    else:
+        payload = None
+
+    if replace_nadebot:
+        if command in nadebot_commands:
+            reply_string = f"Sorry {player}, Nades's  bot is offline atm."
+            reply_needed = True
+
+    if command[:7] == "!luxbot":
+        try:
+            sub_command = command.split(":", 1)[1]
+        except KeyError:
+            sub_command = None
+            reply_string = f"Sorry {player}, that is an invalid LuxBot command."
+            reply_needed = True
+
+        if player in whitelisted_accounts:
+            if sub_command == "echo":
+                reply_string = f"Echo: {player}: {payload}"
+                reply_needed = True
+        else:
+            reply_string = f"Sorry {player}, you are not authorized to issue LuxBot commands."
+            reply_needed = True
+
+    if reply_needed:
+        await send_chat_message(reply_string)
+
+
 async def handle_player_offline(player: str):
     if player in online_mods:
         online_mods.remove(player)
@@ -148,7 +190,8 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
         if command == "echo":
             await send_custom_message(player, content)
         elif command == "chatecho":
-            await send_chat_message(player, content)
+            chat_string = f"CHAT={player} echo: {content}"
+            await send_chat_message(chat_string)
         elif command == "relay":
             recipient = content.split(":")[0]
             message = content.split(":")[1]
@@ -159,6 +202,14 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
         elif command == "blacklist":
             whitelisted_accounts.remove(content.strip())
             await send_custom_message(player, f"{content} has been removed from the interactor whitelist.")
+        elif command == "togglenadebotreply":
+            global replace_nadebot
+            replace_nadebot = not replace_nadebot
+            if replace_nadebot:
+                status = "on"
+            else:
+                status = "off"
+            await send_custom_message(player, f"Nadebot replies are now {status}.")
         else:
             await send_custom_message(player, f"{command} is not a valid interactor command.")
     else:
@@ -203,9 +254,8 @@ async def send_custom_message(player: str, content: str):
     await page.evaluate(f"window.websocket.send('{custom_string}')")
 
 
-async def send_chat_message(player: str, content: str):
-    chat_string = f"CHAT={player} echo: {content}"
-    await page.evaluate(f"window.websocket.send('{chat_string}')")
+async def send_chat_message(chat_string: str):
+    await page.evaluate(f"window.websocket.send('CHAT={chat_string}')")
 
 
 def log_message(message: str):
