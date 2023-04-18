@@ -160,13 +160,20 @@ async def handle_chat_command(player: str, message: str):
             sub_command = command.split(":", 1)[1]
         except KeyError:
             sub_command = None
-            reply_string = f"Sorry {player}, that is an invalid LuxBot command."
+            reply_string = f"Sorry {player}, that is an invalid LuxBot command format."
             reply_needed = True
 
         if player in whitelisted_accounts:
             if sub_command == "echo":
                 reply_string = f"Echo: {player}: {payload}"
                 reply_needed = True
+            elif sub_command == "easter":
+                reply_string = f"https://greasyfork.org/en/scripts/463496-idlepixel-easter-2023-tracker"
+                reply_needed = True
+            else:
+                if sub_command is not None:
+                    reply_string = f"Sorry {player}, that is an invalid LuxBot command."
+                    reply_needed = True
         else:
             reply_string = f"Sorry {player}, you are not authorized to issue LuxBot commands."
             reply_needed = True
