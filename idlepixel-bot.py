@@ -30,8 +30,8 @@ online_mods = set()
 whitelisted_accounts = ["lux", "axe", "luxferre"]
 cl_args = sys.argv
 development_mode = False
-replace_nadebot = False
 global replace_nadebot
+replace_nadebot = False
 nadebot_commands = ["!bigbone",  "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp"]
 
 for arg in cl_args:
