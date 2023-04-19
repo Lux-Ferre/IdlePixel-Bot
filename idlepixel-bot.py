@@ -154,7 +154,7 @@ async def handle_chat_command(player: str, message: str):
 
     if replace_nadebot:
         if command in nadebot_commands:
-            reply_string = f"Sorry {player}, Nades's  bot is offline atm."
+            reply_string = f"Sorry {player}, Nadess  bot is offline atm."
             reply_needed = True
 
     if command[:7] == "!luxbot":
@@ -203,7 +203,7 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
         if command == "echo":
             await send_custom_message(player, content)
         elif command == "chatecho":
-            chat_string = f"CHAT={player} echo: {content}"
+            chat_string = f"{player} echo: {content}"
             await send_chat_message(chat_string)
         elif command == "relay":
             recipient = content.split(":")[0]
@@ -273,7 +273,9 @@ async def send_custom_message(player: str, content: str):
 
 
 async def send_chat_message(chat_string: str):
-    await page.evaluate(f"window.websocket.send('CHAT={chat_string}')")
+    chat_string = chat_string.replace("`", "")
+    chat_string = f"window.websocket.send(`CHAT={chat_string}`)"
+    await page.evaluate(chat_string)
 
 
 def log_message(message: str):
