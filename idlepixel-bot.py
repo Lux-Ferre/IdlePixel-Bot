@@ -224,10 +224,36 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
                 status = "off"
             await send_custom_message(player, f"Nadebot replies are now {status}.")
         elif command == "help":
-            help_string = "Command List"
-            for com in interactor_commands:
-                help_string += f" | {com}"
-            await send_custom_message(player, help_string)
+            if content is None:
+                help_string = "Command List"
+                for com in interactor_commands:
+                    help_string += f" | {com}"
+                await send_custom_message(player, help_string)
+                await send_custom_message(player, "help:command will give a brief description of the command.")
+            elif content == "echo":
+                help_string = "Echos message as custom. (echo:message)"
+                await send_custom_message(player, help_string)
+            elif content == "chatecho":
+                help_string = "Echos message into chat. (chatecho:message)"
+                await send_custom_message(player, help_string)
+            elif content == "relay":
+                help_string = "Passes on message to another account. (relay:account:message)"
+                await send_custom_message(player, help_string)
+            elif content == "whitelist":
+                help_string = "Temporarily adds account to whitelist. (whitelist:account)"
+                await send_custom_message(player, help_string)
+            elif content == "blacklist":
+                help_string = "Temporarily removes account from whitelist. (blacklist:account)"
+                await send_custom_message(player, help_string)
+            elif content == "togglenadebotreply":
+                help_string = "Toggles bot responses to Nadess bot commands."
+                await send_custom_message(player, help_string)
+            elif content == "help":
+                help_string = "Lists commands or gives a description of a command. (help:command)"
+                await send_custom_message(player, help_string)
+            else:
+                help_string = "Invalid help command. Should be of format (help:command)"
+                await send_custom_message(player, help_string)
         else:
             await send_custom_message(player, f"{command} is not a valid interactor command.")
     else:
