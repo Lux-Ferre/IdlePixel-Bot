@@ -98,7 +98,8 @@ async def on_chat(data: str):
 
     if message_data["message"][0] == "!":
         await handle_chat_command(player=message_data["username"], message=message_data["message"])
-        print(message_data["message"])
+        if development_mode:
+            print(f'Chat command received: {message_data["message"]}')
 
 
 def on_yell(data: str):
