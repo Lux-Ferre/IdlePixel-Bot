@@ -242,6 +242,10 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
             elif content == "whitelist":
                 help_string = "Temporarily adds account to whitelist. (whitelist:account)"
                 await send_custom_message(player, help_string)
+                whitelist_string = "Whitelisted accounts"
+                for account in whitelisted_accounts:
+                    whitelist_string += f" | {account}"
+                await send_custom_message(player, whitelist_string)
             elif content == "blacklist":
                 help_string = "Temporarily removes account from whitelist. (blacklist:account)"
                 await send_custom_message(player, help_string)
