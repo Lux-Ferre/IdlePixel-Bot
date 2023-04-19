@@ -142,6 +142,7 @@ async def on_custom(data: str):
 
 
 async def handle_chat_command(player: str, message: str):
+    reply_string = ""
     reply_needed = False
     split_message = message.split(" ", 1)
     command = split_message[0]
@@ -196,6 +197,7 @@ async def poll_online_mods():
 
 
 async def handle_interactor(player: str, command: str, content: str, callback_id: str):
+    interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply", "help"]
     if player in whitelisted_accounts:
         if command == "echo":
             await send_custom_message(player, content)
@@ -220,6 +222,11 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
             else:
                 status = "off"
             await send_custom_message(player, f"Nadebot replies are now {status}.")
+        elif command == "help":
+            help_string = "Command List"
+            for com in interactor_commands:
+                help_string += f" | {com}"
+            await send_custom_message(player, help_string)
         else:
             await send_custom_message(player, f"{command} is not a valid interactor command.")
     else:
@@ -322,7 +329,7 @@ async def main():
             async for line in reader:
                 print(f'Got: {line.decode()!r}')
         else:
-            browser.close()
+            await browser.close()
 
 
 asyncio.run(main())
