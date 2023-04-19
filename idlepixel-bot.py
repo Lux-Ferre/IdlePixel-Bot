@@ -184,7 +184,10 @@ async def handle_chat_command(player: str, message: str):
 
 async def handle_player_offline(player: str):
     if player in online_mods:
-        online_mods.remove(player)
+        try:
+            online_mods.remove(player)
+        except ValueError:
+            pass
         await send_modmod_message(payload=f"{player} has logged out!", command="MSG", player="ALL")
 
 
@@ -250,7 +253,7 @@ async def send_modmod_message(**kwargs):
     player = kwargs.get("player", None)
     message = f"MODMOD:{command}:{payload}"
     if player == "ALL":
-        for account in online_mods:
+        for account in online_mods.copy():
             await send_custom_message(account, message)
     else:
         await send_custom_message(player, message)
