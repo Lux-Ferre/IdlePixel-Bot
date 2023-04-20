@@ -300,7 +300,6 @@ async def handle_modmod(player: str, command: str, content: str, callback_id: st
         if content == "1:0":
             await send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
         elif content == "0:0":
-            await send_custom_message(player, "0:0")
             if player == "luxferre":
                 await poll_online_mods()
     elif command == "MODCHAT":
