@@ -1,4 +1,5 @@
 import asyncio
+import random
 import sys
 import os
 from playwright.async_api import async_playwright
@@ -158,19 +159,48 @@ async def handle_chat_command(player: str, message: str):
             reply_needed = True
 
     if command[:7] == "!luxbot":
-        try:
-            sub_command = command.split(":", 1)[1]
-        except KeyError:
-            sub_command = None
-            reply_string = f"Sorry {player}, that is an invalid LuxBot command format."
-            reply_needed = True
-
         if player in whitelisted_accounts:
+            try:
+                sub_command = command.split(":", 1)[1]
+            except KeyError:
+                sub_command = None
+                reply_string = f"Sorry {player}, that is an invalid LuxBot command format."
+                reply_needed = True
+
             if sub_command == "echo":
                 reply_string = f"Echo: {player}: {payload}"
                 reply_needed = True
             elif sub_command == "easter":
                 reply_string = f"https://greasyfork.org/en/scripts/463496-idlepixel-easter-2023-tracker"
+                reply_needed = True
+            elif sub_command == "scripts":
+                reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
+                reply_needed = True
+            elif sub_command == "vega":
+                vega_links = {
+                    "santa": "https://prnt.sc/iLEELtvirILy",
+                    "paper": "https://prnt.sc/5Ga3Tsl0oay6",
+                    "face": "https://prnt.sc/WbVMwBw63d9g",
+                    "attack": "https://prnt.sc/dASKN1prvBJ9",
+                    "kitten": "https://prnt.sc/rp_t4eiSGM1h",
+                    "hide": "https://prnt.sc/aPvMRNNkbbEE",
+                    "beans": "https://prnt.sc/_XCgGFh3jIbv",
+                    "borgor": "https://prnt.sc/HwewSCtGlJvM",
+                    "banana": "https://prnt.sc/pSs3rVcPlfHE",
+                    "gamer": "https://prnt.sc/yEQaV346hY7c",
+                    "peer": "https://prnt.sc/LgPFXqfyk3Gi",
+                    "axolotl": "https://prnt.sc/ev3f_BkI6CsN",
+                    "noodle": "https://prnt.sc/TTYHSPbazWbJ",
+                    "reader": "https://prnt.sc/N3oVzhnb3N80",
+                }
+                if payload is not None:
+                    try:
+                        reply_string = vega_links[payload]
+                    except KeyError:
+                        reply_string = "Invalid Vega."
+                else:
+                    reply_string = random.choice(list(vega_links.values()))
+
                 reply_needed = True
             else:
                 if sub_command is not None:
