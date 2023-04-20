@@ -28,7 +28,7 @@ for key in env_consts:
 
 idle_pixel_connected = False
 online_mods = set()
-whitelisted_accounts = ["lux", "axe", "luxferre", "godofnades"]
+whitelisted_accounts = ["lux", "axe", "luxferre", "godofnades", "amyjane1991"]
 cl_args = sys.argv
 development_mode = False
 global replace_nadebot
