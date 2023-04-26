@@ -5,6 +5,7 @@ import os
 from playwright.async_api import async_playwright
 from datetime import datetime
 from discord import SyncWebhook
+from jokeapi import Jokes
 
 
 def get_env_var(env_var: str):
@@ -34,6 +35,8 @@ development_mode = False
 global replace_nadebot
 replace_nadebot = False
 nadebot_commands = ["!bigbone",  "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp"]
+global nadebot_reply
+nadebot_reply = "Nadess  bot is offline atm."
 
 for arg in cl_args:
     if arg == "-d":
@@ -155,7 +158,7 @@ async def handle_chat_command(player: str, message: str):
 
     if replace_nadebot:
         if command in nadebot_commands:
-            reply_string = f"Sorry {player}, Nadess  bot is offline atm."
+            reply_string = f"Sorry {player}, " + nadebot_reply
             reply_needed = True
 
     if command[:7] == "!luxbot":
@@ -202,6 +205,15 @@ async def handle_chat_command(player: str, message: str):
                     reply_string = random.choice(list(vega_links.values()))
 
                 reply_needed = True
+            elif sub_command == "joke":
+                j = await Jokes()
+                joke = await j.get_joke(
+                    category=["pun"],
+                    blacklist=["nsfw", "religious", "political", "racist", "sexist", "explicit"],
+                    joke_type="single"
+                )
+                reply_string = joke["joke"]
+                reply_needed = True
             else:
                 if sub_command is not None:
                     reply_string = f"Sorry {player}, that is an invalid LuxBot command."
@@ -228,7 +240,7 @@ async def poll_online_mods():
 
 
 async def handle_interactor(player: str, command: str, content: str, callback_id: str):
-    interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply", "help"]
+    interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply", "nadesreply", "help"]
     if player in whitelisted_accounts:
         if command == "echo":
             await send_custom_message(player, content)
@@ -253,6 +265,20 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
             else:
                 status = "off"
             await send_custom_message(player, f"Nadebot replies are now {status}.")
+        elif command == "nadesreply":
+            content = content.replace("'", "")
+            global nadebot_reply
+            nadebot_reply = content
+            await send_custom_message(player, f"New NadeBot reply set. New reply is:")
+            await send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
+        elif command == "joke":
+            j = await Jokes()  # Initialise the class
+            joke = await j.get_joke(
+                category=["pun"],
+                blacklist=["nsfw", "religious", "political", "racist", "sexist", "explicit"],
+                joke_type="single"
+            )
+            await send_custom_message(player, joke["joke"])
         elif command == "help":
             if content is None:
                 help_string = "Command List"
@@ -282,6 +308,10 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
             elif content == "togglenadebotreply":
                 help_string = "Toggles bot responses to Nadess bot commands."
                 await send_custom_message(player, help_string)
+            elif content == "nadesreply":
+                help_string = "Sets a new reply string for Nadess bot commands. (nadesreply:reply_string) Current string is:"
+                await send_custom_message(player, help_string)
+                await send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
             elif content == "help":
                 help_string = "Lists commands or gives a description of a command. (help:command)"
                 await send_custom_message(player, help_string)
@@ -333,6 +363,7 @@ async def send_custom_message(player: str, content: str):
 
 async def send_chat_message(chat_string: str):
     chat_string = chat_string.replace("`", "")
+    chat_string = chat_string.replace("'", "")
     chat_string = f"window.websocket.send(`CHAT={chat_string}`)"
     await page.evaluate(chat_string)
 
