@@ -37,6 +37,7 @@ replace_nadebot = False
 nadebot_commands = ["!bigbone",  "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp"]
 global nadebot_reply
 nadebot_reply = "Nadess  bot is offline atm."
+automod_flag_words = ["nigger", "nigga", "fag", "chink", "beaner", ]
 
 for arg in cl_args:
     if arg == "-d":
@@ -100,10 +101,27 @@ async def on_chat(data: str):
 
     log_message(formatted_chat)
 
+    await handle_automod(message_data)
+
     if message_data["message"][0] == "!":
         await handle_chat_command(player=message_data["username"], message=message_data["message"])
         if development_mode:
             print(f'Chat command received: {message_data["message"]}')
+
+
+async def handle_automod(data):
+    player = data["username"]
+    message = data["message"].lower()
+    for trigger in automod_flag_words:
+        if trigger in message:
+            message_string = f"{data['username']} send a message with a blacklisted word."
+            await send_modmod_message(payload=message_string, command="MSG", player="ALL")
+            length = "24"
+            reason = f"Using the word: {trigger}"
+            is_ip = "false"
+            await mute_player(player, length, reason, is_ip)
+            await send_chat_message(f"{player} has been muted by me.")
+            break
 
 
 def on_yell(data: str):
@@ -202,7 +220,8 @@ async def handle_chat_command(player: str, message: str):
                     except KeyError:
                         reply_string = "Invalid Vega."
                 else:
-                    reply_string = random.choice(list(vega_links.values()))
+                    random_vega = random.choice(list(vega_links))
+                    reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
 
                 reply_needed = True
             elif sub_command == "joke":
@@ -237,6 +256,12 @@ async def handle_player_offline(player: str):
 
 async def poll_online_mods():
     await send_modmod_message(command="HELLO", player="ALL", payload="0:0")
+
+
+async def mute_player(player, length, reason, is_ip):
+    # websocket.send("MUTE=" + username_target + "~" + hours + "~" + reason + "~" + is_ip);
+    mute_string = f"MUTE={player}~{length}~{reason}~{is_ip}"
+    await page.evaluate(f"window.websocket.send('{mute_string}')")
 
 
 async def handle_interactor(player: str, command: str, content: str, callback_id: str):
