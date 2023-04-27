@@ -114,7 +114,7 @@ async def handle_automod(data):
     message = data["message"].lower()
     for trigger in automod_flag_words:
         if trigger in message:
-            message_string = f"{data['username']} send a message with a blacklisted word."
+            message_string = f"{data['username']} sent a message with the blacklisted word: {trigger}."
             await send_modmod_message(payload=message_string, command="MSG", player="ALL")
             length = "24"
             reason = f"Using the word: {trigger}"
