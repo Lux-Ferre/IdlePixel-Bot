@@ -233,10 +233,17 @@ async def handle_chat_command(player: str, message: str):
                 )
                 reply_string = joke["joke"]
                 reply_needed = True
+            elif sub_command == "import":
+                if payload == "antigravity":
+                    reply_string = "https://xkcd.com/353"
+                    reply_needed = True
             else:
                 if sub_command is not None:
                     reply_string = f"Sorry {player}, that is an invalid LuxBot command."
                     reply_needed = True
+        elif player == "flymanry":
+            reply_string = f"Never whitelisting you Fly."
+            reply_needed = True
         else:
             reply_string = f"Sorry {player}, you are not authorized to issue LuxBot commands."
             reply_needed = True
