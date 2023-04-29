@@ -30,11 +30,12 @@ for key in env_consts:
 idle_pixel_connected = False
 online_mods = set()
 whitelisted_accounts = ["lux", "axe", "luxferre", "luxchatter", "godofnades", "amyjane1991"]
+ignore_accounts = ["flymanry"]
 cl_args = sys.argv
 development_mode = False
 global replace_nadebot
 replace_nadebot = False
-nadebot_commands = ["!bigbone",  "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp"]
+nadebot_commands = ["!bigbone",  "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp", "!joke"]
 global nadebot_reply
 nadebot_reply = "Nadess  bot is offline atm."
 automod_flag_words = ["nigger", "nigga", "fag", "chink", "beaner", ]
@@ -241,7 +242,7 @@ async def handle_chat_command(player: str, message: str):
                 if sub_command is not None:
                     reply_string = f"Sorry {player}, that is an invalid LuxBot command."
                     reply_needed = True
-        elif player == "flymanry":
+        elif player in ignore_accounts:
             pass
         else:
             reply_string = f"Sorry {player}, you are not authorized to issue LuxBot commands."
