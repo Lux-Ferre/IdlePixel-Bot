@@ -214,6 +214,7 @@ async def handle_chat_command(player: str, message: str):
                     "axolotl": "https://prnt.sc/ev3f_BkI6CsN",
                     "noodle": "https://prnt.sc/TTYHSPbazWbJ",
                     "reader": "https://prnt.sc/N3oVzhnb3N80",
+                    "shutout": "https://prnt.sc/i06Ff5mifQNC",
                 }
                 if payload is not None:
                     try:
