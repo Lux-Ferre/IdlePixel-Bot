@@ -109,7 +109,7 @@ async def on_chat(data: str):
             print(f'Chat command received: {message_data["message"]}')
 
 
-async def handle_automod(data):
+async def handle_automod(data: dict):
     player = data["username"]
     message = data["message"].lower()
     for trigger in automod_flag_words:
@@ -242,8 +242,7 @@ async def handle_chat_command(player: str, message: str):
                     reply_string = f"Sorry {player}, that is an invalid LuxBot command."
                     reply_needed = True
         elif player == "flymanry":
-            reply_string = f"Never whitelisting you Fly."
-            reply_needed = True
+            pass
         else:
             reply_string = f"Sorry {player}, you are not authorized to issue LuxBot commands."
             reply_needed = True
@@ -265,7 +264,7 @@ async def poll_online_mods():
     await send_modmod_message(command="HELLO", player="ALL", payload="0:0")
 
 
-async def mute_player(player, length, reason, is_ip):
+async def mute_player(player: str, length: str, reason: str, is_ip: str):
     # websocket.send("MUTE=" + username_target + "~" + hours + "~" + reason + "~" + is_ip);
     mute_string = f"MUTE={player}~{length}~{reason}~{is_ip}"
     await page.evaluate(f"window.websocket.send('{mute_string}')")
