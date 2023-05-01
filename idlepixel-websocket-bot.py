@@ -1,14 +1,17 @@
 import asyncio
-import random
-import sys
 import os
 from playwright.async_api import async_playwright
+from bs4 import BeautifulSoup
+import websocket
+import random
+import sys
 from datetime import datetime
 from discord import SyncWebhook
-from jokeapi import Jokes
+import rel
+import ssl
 
 
-def get_env_var(env_var: str):
+def get_env_var(env_var: str) -> str:
     try:
         return os.environ[env_var]
     except KeyError:
@@ -16,55 +19,56 @@ def get_env_var(env_var: str):
         raise
 
 
-env_consts = {
-    "IP_USERNAME": "",
-    "IP_PASSWORD": "",
-    "TESTING_HOOK_URL": "",
-    "LBT_DISCORD_HOOK_URL": "",
-    "DH_DISCORD_HOOK_URL": ""
-}
+def set_env_consts() -> dict:
+    env_const_list = {
+        "IP_USERNAME": "",
+        "IP_PASSWORD": "",
+        "TESTING_HOOK_URL": "",
+        "LBT_DISCORD_HOOK_URL": "",
+        "DH_DISCORD_HOOK_URL": ""
+    }
 
-for key in env_consts:
-    env_consts[key] = get_env_var(key)
+    for key in env_const_list:
+        env_const_list[key] = get_env_var(key)
 
-idle_pixel_connected = False
-online_mods = set()
-whitelisted_accounts = ["lux", "axe", "luxferre", "luxchatter", "godofnades", "amyjane1991"]
-ignore_accounts = ["flymanry"]
-cl_args = sys.argv
-development_mode = False
-global replace_nadebot
-replace_nadebot = False
-nadebot_commands = ["!bigbone",  "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp", "!joke"]
-global nadebot_reply
-nadebot_reply = "Nadess  bot is offline atm."
-automod_flag_words = ["nigger", "nigga", "fag", "chink", "beaner", ]
-
-for arg in cl_args:
-    if arg == "-d":
-        print("Development mode enabled.")
-        development_mode = True
-
-global page
-
-lbt_webhook = SyncWebhook.from_url(env_consts["LBT_DISCORD_HOOK_URL"])
-dh_webhook = SyncWebhook.from_url(env_consts["DH_DISCORD_HOOK_URL"])
-testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
+    return env_const_list
 
 
-def on_web_socket(ws):
-    print(f"WebSocket opened: {ws.url}")
-    ws.on("framesent", on_message_send)
-    ws.on("framereceived", receive_message)
-    ws.on("close", handle_disconnect)
+def is_development_mode():
+    cl_args = sys.argv
+    dev_mode = False
+
+    for arg in cl_args:
+        if arg == "-d":
+            print("Development mode enabled.")
+            dev_mode = True
+
+    return dev_mode
 
 
-def on_message_send(sent_message: str):
-    if development_mode:
-        print("Sent: " + sent_message)
+async def get_signature() -> str:
+    async with async_playwright() as p:
+        browser_type = p.chromium
+        browser = await browser_type.launch_persistent_context("persistent_context")
+        page = await browser.new_page()
+
+        await page.goto("https://idle-pixel.com/login/")
+        await page.locator('[id=id_username]').fill(env_consts["IP_USERNAME"])
+        await page.locator('[id=id_password]').fill(env_consts["IP_PASSWORD"])
+        await page.locator("[id=login-submit-button]").click()
+
+        page_content = await page.content()
+        soup = BeautifulSoup(page_content, 'html.parser')
+        script_tag = soup.find("script").text
+
+        sig_plus_wrap = script_tag.split(";", 1)[0]
+
+        signature = sig_plus_wrap.split("'")[1]
+
+        return signature
 
 
-async def receive_message(raw_message: str):
+def on_ws_message(ws, raw_message):
     split_message = raw_message.split("=", 1)
     if len(split_message) > 1:
         [message_type, message_data] = split_message
@@ -73,19 +77,32 @@ async def receive_message(raw_message: str):
         message_data = ""
 
     if message_type == "SET_ITEMS":
-        pass
-        # print(f"{message_type}: {message_data}")
+        if development_mode:
+            print(f"{message_type}: {message_data}")
     elif message_type == "CHAT":
-        await on_chat(message_data)
+        on_chat(message_data)
     elif message_type == "YELL":
         on_yell(message_data)
     elif message_type == "CUSTOM":
-        await on_custom(message_data)
+        on_custom(message_data)
     else:
         print(f"{message_type}: {message_data}")
 
 
-async def on_chat(data: str):
+def on_ws_error(ws, error):
+    pass
+
+
+def on_ws_close(ws, close_status_code, close_msg):
+    print("### closed ###")
+
+
+def on_ws_open(ws):
+    print("Opened connection")
+    ws.send(f"LOGIN={signature}")
+
+
+def on_chat(data: str):
     data_split = data.split("~")
     message_data = {
         "username": data_split[0],
@@ -102,26 +119,26 @@ async def on_chat(data: str):
 
     log_message(formatted_chat)
 
-    await handle_automod(message_data)
+    handle_automod(message_data)
 
     if message_data["message"][0] == "!":
-        await handle_chat_command(player=message_data["username"], message=message_data["message"])
+        handle_chat_command(player=message_data["username"], message=message_data["message"])
         if development_mode:
             print(f'Chat command received: {message_data["message"]}')
 
 
-async def handle_automod(data: dict):
+def handle_automod(data: dict):
     player = data["username"]
     message = data["message"].lower()
     for trigger in automod_flag_words:
         if trigger in message:
             message_string = f"{data['username']} sent a message with the blacklisted word: {trigger}."
-            await send_modmod_message(payload=message_string, command="MSG", player="ALL")
+            send_modmod_message(payload=message_string, command="MSG", player="ALL")
             length = "24"
             reason = f"Using the word: {trigger}"
             is_ip = "false"
-            await mute_player(player, length, reason, is_ip)
-            await send_chat_message(f"{player} has been muted by me.")
+            mute_player(player, length, reason, is_ip)
+            send_chat_message(f"{player} has been axed from chat.")
             break
 
 
@@ -134,11 +151,11 @@ def on_yell(data: str):
     log_message(formatted_chat)
 
 
-async def on_custom(data: str):
+def on_custom(data: str):
     [player, data_packet] = data.split("~")
 
     if data_packet == "PLAYER_OFFLINE":
-        await handle_player_offline(player)
+        handle_player_offline(player)
 
         callback_id = None
         plugin = None
@@ -160,12 +177,12 @@ async def on_custom(data: str):
                 f"'{plugin}' received '{command}' command with id '{callback_id}' and content '{content}' from {player}.")
 
     if plugin == "interactor":
-        await handle_interactor(player, command, content, callback_id)
+        handle_interactor(player, command, content, callback_id)
     elif plugin == "MODMOD":
-        await handle_modmod(player, command, content, callback_id)
+        handle_modmod(player, command, content, callback_id)
 
 
-async def handle_chat_command(player: str, message: str):
+def handle_chat_command(player: str, message: str):
     reply_string = ""
     reply_needed = False
     split_message = message.split(" ", 1)
@@ -226,15 +243,6 @@ async def handle_chat_command(player: str, message: str):
                     reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
 
                 reply_needed = True
-            elif sub_command == "joke":
-                j = await Jokes()
-                joke = await j.get_joke(
-                    category=["pun"],
-                    blacklist=["nsfw", "religious", "political", "racist", "sexist", "explicit"],
-                    joke_type="single"
-                )
-                reply_string = joke["joke"]
-                reply_needed = True
             elif sub_command == "import":
                 if payload == "antigravity":
                     reply_string = "https://xkcd.com/353"
@@ -250,46 +258,46 @@ async def handle_chat_command(player: str, message: str):
             reply_needed = True
 
     if reply_needed:
-        await send_chat_message(reply_string)
+        send_chat_message(reply_string)
 
 
-async def handle_player_offline(player: str):
+def handle_player_offline(player: str):
     if player in online_mods:
         try:
             online_mods.remove(player)
         except ValueError:
             pass
-        await send_modmod_message(payload=f"{player} has logged out!", command="MSG", player="ALL")
+        send_modmod_message(payload=f"{player} has logged out!", command="MSG", player="ALL")
 
 
-async def poll_online_mods():
-    await send_modmod_message(command="HELLO", player="ALL", payload="0:0")
+def poll_online_mods():
+    send_modmod_message(command="HELLO", player="ALL", payload="0:0")
 
 
-async def mute_player(player: str, length: str, reason: str, is_ip: str):
+def mute_player(player: str, length: str, reason: str, is_ip: str):
     # websocket.send("MUTE=" + username_target + "~" + hours + "~" + reason + "~" + is_ip);
     mute_string = f"MUTE={player}~{length}~{reason}~{is_ip}"
-    await page.evaluate(f"window.websocket.send('{mute_string}')")
+    ws.send(f"{mute_string}")
 
 
-async def handle_interactor(player: str, command: str, content: str, callback_id: str):
+def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply", "nadesreply", "help"]
     if player in whitelisted_accounts:
         if command == "echo":
-            await send_custom_message(player, content)
+            send_custom_message(player, content)
         elif command == "chatecho":
             chat_string = f"{player} echo: {content}"
-            await send_chat_message(chat_string)
+            send_chat_message(chat_string)
         elif command == "relay":
             recipient = content.split(":")[0]
             message = content.split(":")[1]
-            await send_custom_message(recipient, message)
+            send_custom_message(recipient, message)
         elif command == "whitelist":
             whitelisted_accounts.append(content.strip())
-            await send_custom_message(player, f"{content} has been temporarily whitelisted to issue interactor commands.")
+            send_custom_message(player, f"{content} has been temporarily whitelisted to issue interactor commands.")
         elif command == "blacklist":
             whitelisted_accounts.remove(content.strip())
-            await send_custom_message(player, f"{content} has been removed from the interactor whitelist.")
+            send_custom_message(player, f"{content} has been removed from the interactor whitelist.")
         elif command == "togglenadebotreply":
             global replace_nadebot
             replace_nadebot = not replace_nadebot
@@ -297,76 +305,67 @@ async def handle_interactor(player: str, command: str, content: str, callback_id
                 status = "on"
             else:
                 status = "off"
-            await send_custom_message(player, f"Nadebot replies are now {status}.")
+            send_custom_message(player, f"Nadebot replies are now {status}.")
         elif command == "nadesreply":
-            content = content.replace("'", "")
             global nadebot_reply
             nadebot_reply = content
-            await send_custom_message(player, f"New NadeBot reply set. New reply is:")
-            await send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
-        elif command == "joke":
-            j = await Jokes()  # Initialise the class
-            joke = await j.get_joke(
-                category=["pun"],
-                blacklist=["nsfw", "religious", "political", "racist", "sexist", "explicit"],
-                joke_type="single"
-            )
-            await send_custom_message(player, joke["joke"])
+            send_custom_message(player, f"New NadeBot reply set. New reply is:")
+            send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
         elif command == "help":
             if content is None:
                 help_string = "Command List"
                 for com in interactor_commands:
                     help_string += f" | {com}"
-                await send_custom_message(player, help_string)
-                await send_custom_message(player, "help:command will give a brief description of the command.")
+                send_custom_message(player, help_string)
+                send_custom_message(player, "help:command will give a brief description of the command.")
             elif content == "echo":
                 help_string = "Echos message as custom. (echo:message)"
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
             elif content == "chatecho":
                 help_string = "Echos message into chat. (chatecho:message)"
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
             elif content == "relay":
                 help_string = "Passes on message to another account. (relay:account:message)"
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
             elif content == "whitelist":
                 help_string = "Temporarily adds account to whitelist. (whitelist:account)"
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
                 whitelist_string = "Whitelisted accounts"
                 for account in whitelisted_accounts:
                     whitelist_string += f" | {account}"
-                await send_custom_message(player, whitelist_string)
+                send_custom_message(player, whitelist_string)
             elif content == "blacklist":
                 help_string = "Temporarily removes account from whitelist. (blacklist:account)"
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
             elif content == "togglenadebotreply":
                 help_string = "Toggles bot responses to Nadess bot commands."
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
             elif content == "nadesreply":
                 help_string = "Sets a new reply string for Nadess bot commands. (nadesreply:reply_string) Current string is:"
-                await send_custom_message(player, help_string)
-                await send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
+                send_custom_message(player, help_string)
+                send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
             elif content == "help":
                 help_string = "Lists commands or gives a description of a command. (help:command)"
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
             else:
                 help_string = "Invalid help command. Should be of format (help:command)"
-                await send_custom_message(player, help_string)
+                send_custom_message(player, help_string)
         else:
-            await send_custom_message(player, f"{command} is not a valid interactor command.")
+            send_custom_message(player, f"{command} is not a valid interactor command.")
     else:
-        await send_custom_message(player, "403: Interactor request denied. Account not approved.")
+        send_custom_message(player, "403: Interactor request denied. Account not approved.")
 
 
-async def handle_modmod(player: str, command: str, content: str, callback_id: str):
+def handle_modmod(player: str, command: str, content: str, callback_id: str):
     online_mods.add(player)
     if command == "HELLO":
         if content == "1:0":
-            await send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
+            send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
         elif content == "0:0":
             if player == "luxferre":
-                await poll_online_mods()
+                poll_online_mods()
     elif command == "MODCHAT":
-        await send_modmod_message(payload=f"{player}: {content}", command="MSG", player="ALL")
+        send_modmod_message(payload=f"{player}: {content}", command="MSG", player="ALL")
     elif command == "MODLIST":
         mod_string = "Mod accounts online at last poll"
         for mod in online_mods:
@@ -374,31 +373,29 @@ async def handle_modmod(player: str, command: str, content: str, callback_id: st
             for word in mod.split(" "):
                 capital_mod += f"{word.capitalize()} "
             mod_string += f" | {capital_mod}"
-        await send_modmod_message(payload=mod_string, command="MSG", player=player)
+        send_modmod_message(payload=mod_string, command="MSG", player=player)
 
 
-async def send_modmod_message(**kwargs):
+def send_modmod_message(**kwargs):
     payload = kwargs.get("payload", None)
     command = kwargs.get("command", None)
     player = kwargs.get("player", None)
     message = f"MODMOD:{command}:{payload}"
     if player == "ALL":
         for account in online_mods.copy():
-            await send_custom_message(account, message)
+            send_custom_message(account, message)
     else:
-        await send_custom_message(player, message)
+        send_custom_message(player, message)
 
 
-async def send_custom_message(player: str, content: str):
+def send_custom_message(player: str, content: str):
     custom_string = f"CUSTOM={player}~{content}"
-    await page.evaluate(f"window.websocket.send('{custom_string}')")
+    ws.send(f"{custom_string}")
 
 
-async def send_chat_message(chat_string: str):
-    chat_string = chat_string.replace("`", "")
-    chat_string = chat_string.replace("'", "")
-    chat_string = f"window.websocket.send(`CHAT={chat_string}`)"
-    await page.evaluate(chat_string)
+def send_chat_message(chat_string: str):
+    chat_string = f"CHAT={chat_string}"
+    ws.send(chat_string)
 
 
 def log_message(message: str):
@@ -412,50 +409,34 @@ def log_message(message: str):
         lbt_webhook.send(message)
 
 
-async def handle_disconnect():
-    print("Disconnect registered.")
-    global idle_pixel_connected
-    idle_pixel_connected = False
-    await asyncio.sleep(60)
-    await connect_to_idlepixel()
+if __name__ == "__main__":
+    env_consts = set_env_consts()
+    development_mode = is_development_mode()
+    online_mods = set()
+    whitelisted_accounts = ["lux", "axe", "luxferre", "luxchatter", "godofnades", "amyjane1991"]
+    ignore_accounts = ["flymanry"]
+    nadebot_commands = ["!bigbone", "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp", "!help"]
+    automod_flag_words = ["nigger", "nigga", "fag", "chink", "beaner", ]
 
+    nadebot_reply = "Nades's  bot is offline atm."
 
-async def connect_to_idlepixel():
-    print("Attempting connection...")
-    await page.goto("https://idle-pixel.com/login/")
-    await page.locator('[id=id_username]').fill(env_consts["IP_USERNAME"])
-    await page.locator('[id=id_password]').fill(env_consts["IP_PASSWORD"])
-    await page.locator("[id=login-submit-button]").click()
-    global idle_pixel_connected
-    idle_pixel_connected = True
-    print("Connection established.")
+    replace_nadebot = False
 
+    lbt_webhook = SyncWebhook.from_url(env_consts["LBT_DISCORD_HOOK_URL"])
+    dh_webhook = SyncWebhook.from_url(env_consts["DH_DISCORD_HOOK_URL"])
+    if development_mode:
+        testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
-async def main():
-    run_forever = True
-    global page
-    timed_out = False
+    signature = asyncio.run(get_signature())
+    websocket.enableTrace(False)
+    ws = websocket.WebSocketApp("wss://server1.idle-pixel.com",
+                                on_open=on_ws_open,
+                                on_message=on_ws_message,
+                                on_error=on_ws_error,
+                                on_close=on_ws_close)
 
-    async with async_playwright() as p:
-        browser_type = p.chromium
-        browser = await browser_type.launch_persistent_context("persistent_context")
-        page = await browser.new_page()
-
-        if run_forever:
-            print('Press CTRL-D to stop')
-            reader = asyncio.StreamReader()
-            pipe = sys.stdin
-            loop = asyncio.get_running_loop()
-            if not idle_pixel_connected:
-                await connect_to_idlepixel()
-            page.on("websocket", on_web_socket)
-            if timed_out:
-                await handle_disconnect()
-            await loop.connect_read_pipe(lambda: asyncio.StreamReaderProtocol(reader), pipe)
-            async for line in reader:
-                print(f'Got: {line.decode()!r}')
-        else:
-            await browser.close()
-
-
-asyncio.run(main())
+    ws.run_forever(dispatcher=rel,
+                   reconnect=5,
+                   sslopt={"cert_reqs": ssl.CERT_NONE})  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly, no SSL cert
+    rel.signal(2, rel.abort)  # Keyboard Interrupt
+    rel.dispatch()
