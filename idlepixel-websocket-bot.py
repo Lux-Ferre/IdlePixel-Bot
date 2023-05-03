@@ -9,6 +9,9 @@ from datetime import datetime
 from discord import SyncWebhook
 import rel
 import ssl
+import sqlite3
+import json
+import base64
 
 
 def get_env_var(env_var: str) -> str:
@@ -411,16 +414,41 @@ def log_message(message: str):
         lbt_webhook.send(message)
 
 
+def read_all_data(cur):
+    res = cur.execute("SELECT config, data from configs")
+    encoded_configs = res.fetchall()
+    loaded_configs = {}
+
+    for config in encoded_configs:
+        key = config[0]
+        encoded_value = config[1]
+
+        if isinstance(encoded_value, str):
+            decoded_value = encoded_value
+        else:
+            decoded_value = json.loads(base64.b64decode(encoded_value))
+
+        loaded_configs[key] = decoded_value
+
+    return loaded_configs
+
+
 if __name__ == "__main__":
     env_consts = set_env_consts()
     development_mode = is_development_mode()
     online_mods = set()
-    whitelisted_accounts = ["lux", "axe", "luxferre", "luxchatter", "godofnades", "amyjane1991"]
-    ignore_accounts = ["flymanry"]
-    nadebot_commands = ["!bigbone", "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp", "!help"]
-    automod_flag_words = ["nigger", "nigga", "niga", "fag", "chink", "beaner", ]
 
-    nadebot_reply = "Nades's  bot is offline atm."
+    con = sqlite3.connect("configs.db")
+    cur = con.cursor()
+
+    all_configs = read_all_data(cur)
+
+    whitelisted_accounts = all_configs["whitelisted_accounts"]
+    ignore_accounts = all_configs["ignore_accounts"]
+    nadebot_commands = all_configs["nadebot_commands"]
+    automod_flag_words = all_configs["automod_flag_words"]
+    nadebot_reply = all_configs["nadebot_reply"]
+    vega_links = all_configs["vega_links"]
 
     replace_nadebot = False
 
