@@ -311,6 +311,8 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             nadebot_reply = content
             send_custom_message(player, f"New NadeBot reply set. New reply is:")
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
+        elif command == "speak":
+            send_chat_message(content)
         elif command == "help":
             if content is None:
                 help_string = "Command List"
@@ -416,7 +418,7 @@ if __name__ == "__main__":
     whitelisted_accounts = ["lux", "axe", "luxferre", "luxchatter", "godofnades", "amyjane1991"]
     ignore_accounts = ["flymanry"]
     nadebot_commands = ["!bigbone", "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp", "!help"]
-    automod_flag_words = ["nigger", "nigga", "fag", "chink", "beaner", ]
+    automod_flag_words = ["nigger", "nigga", "niga", "fag", "chink", "beaner", ]
 
     nadebot_reply = "Nades's  bot is offline atm."
 
