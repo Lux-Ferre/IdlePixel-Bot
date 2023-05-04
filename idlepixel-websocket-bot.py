@@ -316,6 +316,23 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
         elif command == "speak":
             send_chat_message(content)
+        elif command == "mute":
+            if content is None:
+                split_data = None
+                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
+            else:
+                split_data = content.split(";")
+
+            if len(split_data) == 4 and split_data is not None:
+                target = split_data[0]
+                reason = split_data[1]
+                length = split_data[2]
+                is_ip = split_data[3]
+
+                mute_player(target, length, reason, is_ip)
+                send_custom_message(player, f"{target} has been successfully muted for {length} hours.")
+            else:
+                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
         elif command == "help":
             if content is None:
                 help_string = "Command List"
