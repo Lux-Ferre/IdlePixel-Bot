@@ -219,23 +219,6 @@ def handle_chat_command(player: str, message: str):
                 reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
                 reply_needed = True
             elif sub_command == "vega":
-                vega_links = {
-                    "santa": "https://prnt.sc/iLEELtvirILy",
-                    "paper": "https://prnt.sc/5Ga3Tsl0oay6",
-                    "face": "https://prnt.sc/WbVMwBw63d9g",
-                    "attack": "https://prnt.sc/dASKN1prvBJ9",
-                    "kitten": "https://prnt.sc/rp_t4eiSGM1h",
-                    "hide": "https://prnt.sc/aPvMRNNkbbEE",
-                    "beans": "https://prnt.sc/_XCgGFh3jIbv",
-                    "borgor": "https://prnt.sc/HwewSCtGlJvM",
-                    "banana": "https://prnt.sc/pSs3rVcPlfHE",
-                    "gamer": "https://prnt.sc/yEQaV346hY7c",
-                    "peer": "https://prnt.sc/LgPFXqfyk3Gi",
-                    "axolotl": "https://prnt.sc/ev3f_BkI6CsN",
-                    "noodle": "https://prnt.sc/TTYHSPbazWbJ",
-                    "reader": "https://prnt.sc/N3oVzhnb3N80",
-                    "shutout": "https://prnt.sc/i06Ff5mifQNC",
-                }
                 if payload is not None:
                     try:
                         reply_string = vega_links[payload]
