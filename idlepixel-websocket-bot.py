@@ -229,6 +229,26 @@ def handle_chat_command(player: str, message: str):
                     reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
 
                 reply_needed = True
+            elif sub_command == "bear":
+                bear_links = {
+                    "pupper": "https://prnt.sc/Cn1tKIrvZwOM",
+                    "derp": "https://prnt.sc/5gbSLOCE99cn",
+                    "jenga": "https://prnt.sc/5zEvSclW9BIQ",
+                    "vega": "https://prnt.sc/6Dtm8MSFaUEg",
+                    "eepy": "https://prnt.sc/1u3qqxLhJXtO",
+                    "pint": "https://prnt.sc/I9tS6s5bICce",
+                    "water": "https://prnt.sc/5g1Ib9zxEv9Y",
+                }
+                if payload is not None:
+                    try:
+                        reply_string = bear_links[payload]
+                    except KeyError:
+                        reply_string = "Invalid Bear."
+                else:
+                    random_bear = random.choice(list(bear_links))
+                    reply_string = f"Your random Bear is: {random_bear}: {bear_links[random_bear]}"
+
+                reply_needed = True
             elif sub_command == "import":
                 if payload == "antigravity":
                     reply_string = "https://xkcd.com/353"
