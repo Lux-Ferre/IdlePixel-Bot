@@ -310,12 +310,12 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             message = content.split(":")[1]
             send_custom_message(recipient, message)
         elif command == "whitelist":
-            new_whitelist = whitelisted_accounts.append(content.strip())
-            set_config_row("whitelisted_accounts", new_whitelist)
+            whitelisted_accounts.append(content.strip())
+            set_config_row("whitelisted_accounts", whitelisted_accounts)
             send_custom_message(player, f"{content} has been whitelisted to issue interactor & chat commands.")
         elif command == "blacklist":
-            new_whitelist = whitelisted_accounts.remove(content.strip())
-            set_config_row("whitelisted_accounts", new_whitelist)
+            whitelisted_accounts.remove(content.strip())
+            set_config_row("whitelisted_accounts", whitelisted_accounts)
             send_custom_message(player, f"{content} has been removed from the whitelist.")
         elif command == "togglenadebotreply":
             global replace_nadebot

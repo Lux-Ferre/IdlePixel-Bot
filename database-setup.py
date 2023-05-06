@@ -34,6 +34,18 @@ def read_all_data():
     return loaded_configs
 
 
+def set_config_row(key: str, value: str | list):
+    query = "UPDATE configs SET data=? WHERE config=?"
+
+    stringified_value = json.dumps(value)
+    encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
+
+    params = (encoded_string, key)
+    cur.execute(query, params)
+
+    con.commit()
+
+
 if __name__ == "__main__":
     """
     config, data
@@ -45,5 +57,7 @@ if __name__ == "__main__":
     """
     con = sqlite3.connect("configs.db")
     cur = con.cursor()
+
+    set_config_row("whitelisted_accounts", ["lux", "axe", "luxferre", "luxchatter", "godofnades", "amyjane1991"])
 
     print(read_all_data())
