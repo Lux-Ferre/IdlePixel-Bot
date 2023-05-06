@@ -101,7 +101,11 @@ def on_ws_close(ws, close_status_code, close_msg):
 
 
 def on_ws_open(ws):
-    print("Opened connection")
+    print("Opened connection.")
+    print("Acquiring signature...")
+    signature = asyncio.run(get_signature())
+    print("Signature acquired.")
+    print("Logging in...")
     ws.send(f"LOGIN={signature}")
 
 
@@ -477,7 +481,6 @@ if __name__ == "__main__":
     if development_mode:
         testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
-    signature = asyncio.run(get_signature())
     websocket.enableTrace(development_mode)
     ws = websocket.WebSocketApp("wss://server1.idle-pixel.com",
                                 on_open=on_ws_open,
