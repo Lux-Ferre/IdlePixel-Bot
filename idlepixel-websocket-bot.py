@@ -297,8 +297,8 @@ def mute_player(player: str, length: str, reason: str, is_ip: str):
 
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
-    interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply",
-                           "nadesreply", "speak", "mute", "triggers", "help"]
+    interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
+                           "nadesreply", "speak", "mute", "whitelist", "ignores", "triggers", "help"]
     whitelisted_accounts = read_config_row("whitelisted_accounts")
     if player in whitelisted_accounts:
         if command == "echo":
@@ -323,6 +323,19 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 whitelist.remove(payload.strip())
                 set_config_row("whitelisted_accounts", whitelist)
                 send_custom_message(player, f"{content} has been removed from the LuxBot whitelist.")
+        elif command == "ignores":
+            ignores = read_config_row("ignore_accounts")
+            split_sub_command = content.split(";")
+            subcommand = split_sub_command[0]
+            payload = split_sub_command[1]
+            if subcommand == "add":
+                ignores.append(payload.strip())
+                set_config_row("ignore_accounts", ignores)
+                send_custom_message(player, f"{content} has been added to the LuxBot ignore list.")
+            elif subcommand == "remove":
+                ignores.remove(payload.strip())
+                set_config_row("ignore_accounts", ignores)
+                send_custom_message(player, f"{content} has been removed from the LuxBot ignore list.")
         elif command == "triggers":
             trigger_list = read_config_row("automod_flag_words")
             split_sub_command = content.split(";")
@@ -402,6 +415,11 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 help_string = f"Add/remove automod triggers. (triggers:add/remove;trigger)"
                 send_custom_message(player, help_string)
                 send_custom_message(player, f"Current triggers: {trigger_list}")
+            elif content == "ignores":
+                ignores = read_config_row("ignore_list")
+                help_string = f"Add/remove to/from LuxBot ignore list. (ignores:add/remove;account)"
+                send_custom_message(player, help_string)
+                send_custom_message(player, f"Current ignore list: {ignores}")
             elif content == "speak":
                 help_string = "Relays text to chat as the bot. (speak:content)"
                 send_custom_message(player, help_string)
