@@ -416,7 +416,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 send_custom_message(player, help_string)
                 send_custom_message(player, f"Current triggers: {trigger_list}")
             elif content == "ignores":
-                ignores = read_config_row("ignore_list")
+                ignores = read_config_row("ignore_accounts")
                 help_string = f"Add/remove to/from LuxBot ignore list. (ignores:add/remove;account)"
                 send_custom_message(player, help_string)
                 send_custom_message(player, f"Current ignore list: {ignores}")
