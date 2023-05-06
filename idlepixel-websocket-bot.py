@@ -522,7 +522,7 @@ def add_row_to_database(key: str, value: str | list):
     con.commit()
 
 
-def read_config_row(key: str) -> list | str:
+def read_config_row(key: str) -> list | str | dict:
     query = "SELECT data FROM configs WHERE config=?"
     params = (key, )
     res = cur.execute(query, params)
