@@ -318,11 +318,11 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             if subcommand == "add":
                 whitelist.append(payload.strip())
                 set_config_row("whitelisted_accounts", whitelist)
-                send_custom_message(player, f"{content} has been added to the LuxBot whitelist.")
+                send_custom_message(player, f"{payload} has been added to the LuxBot whitelist.")
             elif subcommand == "remove":
                 whitelist.remove(payload.strip())
                 set_config_row("whitelisted_accounts", whitelist)
-                send_custom_message(player, f"{content} has been removed from the LuxBot whitelist.")
+                send_custom_message(player, f"{payload} has been removed from the LuxBot whitelist.")
         elif command == "ignores":
             ignores = read_config_row("ignore_accounts")
             split_sub_command = content.split(";")
@@ -331,11 +331,11 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             if subcommand == "add":
                 ignores.append(payload.strip())
                 set_config_row("ignore_accounts", ignores)
-                send_custom_message(player, f"{content} has been added to the LuxBot ignore list.")
+                send_custom_message(player, f"{payload} has been added to the LuxBot ignore list.")
             elif subcommand == "remove":
                 ignores.remove(payload.strip())
                 set_config_row("ignore_accounts", ignores)
-                send_custom_message(player, f"{content} has been removed from the LuxBot ignore list.")
+                send_custom_message(player, f"{payload} has been removed from the LuxBot ignore list.")
         elif command == "triggers":
             trigger_list = read_config_row("automod_flag_words")
             split_sub_command = content.split(";")
@@ -344,11 +344,11 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             if subcommand == "add":
                 trigger_list.append(payload.strip())
                 set_config_row("automod_flag_words", trigger_list)
-                send_custom_message(player, f"{content} has been added to automod triggers.")
+                send_custom_message(player, f"{payload} has been added to automod triggers.")
             elif subcommand == "remove":
                 trigger_list.remove(payload.strip())
                 set_config_row("automod_flag_words", trigger_list)
-                send_custom_message(player, f"{content} has been removed from the automod triggers.")
+                send_custom_message(player, f"{payload} has been removed from the automod triggers.")
         elif command == "togglenadebotreply":
             global replace_nadebot
             replace_nadebot = not replace_nadebot
