@@ -478,7 +478,7 @@ if __name__ == "__main__":
         testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
     signature = asyncio.run(get_signature())
-    websocket.enableTrace(False)
+    websocket.enableTrace(development_mode)
     ws = websocket.WebSocketApp("wss://server1.idle-pixel.com",
                                 on_open=on_ws_open,
                                 on_message=on_ws_message,
@@ -486,7 +486,7 @@ if __name__ == "__main__":
                                 on_close=on_ws_close)
 
     ws.run_forever(dispatcher=rel,
-                   reconnect=5,
+                   reconnect=60,
                    sslopt={"cert_reqs": ssl.CERT_NONE})  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly, no SSL cert
     rel.signal(2, rel.abort)  # Keyboard Interrupt
     rel.dispatch()
