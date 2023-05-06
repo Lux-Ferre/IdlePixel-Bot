@@ -3,7 +3,7 @@ import json
 import base64
 
 
-def add_row_to_database(key, value):
+def add_row_to_database(key: str, value: str | list):
     stringified_value = json.dumps(value)
     encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     "ignore_accounts", ["flymanry"]
     "nadebot_commands", ["!bigbone", "!combat", "!dhm", "!dho", "!event", "!rocket", "!wiki", "!xp", "!help"]
     "automod_flag_words", ["nigger", "nigga", "niga", "fag", "chink", "beaner", ]
-    "nadebot_reply", "Nades's  bot is offline atm."
+    "nadebot_reply", "Nades's bot is offline atm."
     """
     con = sqlite3.connect("configs.db")
     cur = con.cursor()

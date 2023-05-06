@@ -135,6 +135,7 @@ def on_chat(data: str):
 
 
 def handle_automod(data: dict):
+    automod_flag_words = read_config_row("automod_flag_words")
     player = data["username"]
     message = data["message"].lower()
     for trigger in automod_flag_words:
@@ -200,11 +201,15 @@ def handle_chat_command(player: str, message: str):
         payload = None
 
     if replace_nadebot:
+        nadebot_commands = read_config_row("nadebot_commands")
+        nadebot_reply = read_config_row("nadebot_reply")
         if command in nadebot_commands:
             reply_string = f"Sorry {player}, " + nadebot_reply
             reply_needed = True
 
     if command[:7] == "!luxbot":
+        whitelisted_accounts = read_config_row("whitelisted_accounts")
+        ignore_accounts = read_config_row("ignore_accounts")
         if player in whitelisted_accounts:
             try:
                 sub_command = command.split(":", 1)[1]
@@ -223,6 +228,7 @@ def handle_chat_command(player: str, message: str):
                 reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
                 reply_needed = True
             elif sub_command == "vega":
+                vega_links = read_config_row("vega_links")
                 if payload is not None:
                     try:
                         reply_string = vega_links[payload]
@@ -292,6 +298,7 @@ def mute_player(player: str, length: str, reason: str, is_ip: str):
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply", "nadesreply", "help"]
+    whitelisted_accounts = read_config_row("whitelisted_accounts")
     if player in whitelisted_accounts:
         if command == "echo":
             send_custom_message(player, content)
@@ -317,8 +324,8 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 status = "off"
             send_custom_message(player, f"Nadebot replies are now {status}.")
         elif command == "nadesreply":
-            global nadebot_reply
-            nadebot_reply = content
+            set_config_row("nadebot_reply", content)
+            nadebot_reply = read_config_row("nadebot_reply")
             send_custom_message(player, f"New NadeBot reply set. New reply is:")
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
         elif command == "speak":
@@ -370,6 +377,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 help_string = "Toggles bot responses to Nadess bot commands."
                 send_custom_message(player, help_string)
             elif content == "nadesreply":
+                nadebot_reply = read_config_row("nadebot_reply")
                 help_string = "Sets a new reply string for Nadess bot commands. (nadesreply:reply_string) Current string is:"
                 send_custom_message(player, help_string)
                 send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
@@ -438,7 +446,7 @@ def log_message(message: str):
         lbt_webhook.send(message)
 
 
-def read_all_data(cur):
+def read_all_data():
     res = cur.execute("SELECT config, data from configs")
     encoded_configs = res.fetchall()
     loaded_configs = {}
@@ -457,6 +465,41 @@ def read_all_data(cur):
     return loaded_configs
 
 
+def add_row_to_database(key: str, value: str | list):
+    stringified_value = json.dumps(value)
+    encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
+
+    query = "INSERT INTO configs VALUES (?, ?)"
+    params = (key, encoded_string)
+
+    cur.execute(query, params)
+
+    con.commit()
+
+
+def read_config_row(key: str) -> list | str:
+    query = "SELECT data FROM configs WHERE config=?"
+    params = (key, )
+    res = cur.execute(query, params)
+    encoded_config = res.fetchone()[0]
+    decoded_config = json.loads(base64.b64decode(encoded_config))
+
+    print(decoded_config)
+    return decoded_config
+
+
+def set_config_row(key: str, value: str | list):
+    query = "UPDATE configs SET data=? WHERE config=?"
+
+    stringified_value = json.dumps(value)
+    encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
+
+    params = (encoded_string, key)
+    cur.execute(query, params)
+
+    con.commit()
+
+
 if __name__ == "__main__":
     env_consts = set_env_consts()
     development_mode = is_development_mode()
@@ -465,14 +508,7 @@ if __name__ == "__main__":
     con = sqlite3.connect("configs.db")
     cur = con.cursor()
 
-    all_configs = read_all_data(cur)
-
-    whitelisted_accounts = all_configs["whitelisted_accounts"]
-    ignore_accounts = all_configs["ignore_accounts"]
-    nadebot_commands = all_configs["nadebot_commands"]
-    automod_flag_words = all_configs["automod_flag_words"]
-    nadebot_reply = all_configs["nadebot_reply"]
-    vega_links = all_configs["vega_links"]
+    all_configs = read_all_data()
 
     replace_nadebot = False
 
@@ -481,7 +517,7 @@ if __name__ == "__main__":
     if development_mode:
         testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
-    websocket.enableTrace(development_mode)
+    websocket.enableTrace(False)
     ws = websocket.WebSocketApp("wss://server1.idle-pixel.com",
                                 on_open=on_ws_open,
                                 on_message=on_ws_message,
