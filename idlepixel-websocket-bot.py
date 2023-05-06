@@ -484,7 +484,8 @@ def read_config_row(key: str) -> list | str:
     encoded_config = res.fetchone()[0]
     decoded_config = json.loads(base64.b64decode(encoded_config))
 
-    print(decoded_config)
+    if development_mode:
+        print(decoded_config)
     return decoded_config
 
 
