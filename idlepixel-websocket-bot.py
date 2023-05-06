@@ -311,19 +311,23 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             message = content.split(":")[1]
             send_custom_message(recipient, message)
         elif command == "whitelist":
-            whitelisted_accounts.append(content.strip())
-            set_config_row("whitelisted_accounts", whitelisted_accounts)
-            send_custom_message(player, f"{content} has been whitelisted to issue interactor & chat commands.")
-        elif command == "blacklist":
-            whitelisted_accounts.remove(content.strip())
-            set_config_row("whitelisted_accounts", whitelisted_accounts)
-            send_custom_message(player, f"{content} has been removed from the whitelist.")
+            whitelist = read_config_row("whitelisted_accounts")
+            split_sub_command = content.split(";")
+            subcommand = split_sub_command[0]
+            payload = split_sub_command[1]
+            if subcommand == "add":
+                whitelist.append(payload.strip())
+                set_config_row("whitelisted_accounts", whitelist)
+                send_custom_message(player, f"{content} has been added to the LuxBot whitelist.")
+            elif subcommand == "remove":
+                whitelist.remove(payload.strip())
+                set_config_row("whitelisted_accounts", whitelist)
+                send_custom_message(player, f"{content} has been removed from the LuxBot whitelist.")
         elif command == "triggers":
             trigger_list = read_config_row("automod_flag_words")
             split_sub_command = content.split(";")
             subcommand = split_sub_command[0]
             payload = split_sub_command[1]
-
             if subcommand == "add":
                 trigger_list.append(payload.strip())
                 set_config_row("automod_flag_words", trigger_list)
@@ -381,15 +385,10 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 help_string = "Passes on message to another account. (relay:account:message)"
                 send_custom_message(player, help_string)
             elif content == "whitelist":
-                help_string = "Temporarily adds account to whitelist. (whitelist:account)"
+                whitelist = read_config_row("whitelisted_accounts")
+                help_string = f"Add/remove accounts from whitelist. (whitelist:add/remove;account)"
                 send_custom_message(player, help_string)
-                whitelist_string = "Whitelisted accounts"
-                for account in whitelisted_accounts:
-                    whitelist_string += f" | {account}"
-                send_custom_message(player, whitelist_string)
-            elif content == "blacklist":
-                help_string = "Temporarily removes account from whitelist. (blacklist:account)"
-                send_custom_message(player, help_string)
+                send_custom_message(player, f"Current whitelist: {whitelist}")
             elif content == "togglenadebotreply":
                 help_string = "Toggles bot responses to Nadess bot commands."
                 send_custom_message(player, help_string)
