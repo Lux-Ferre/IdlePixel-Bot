@@ -297,7 +297,8 @@ def mute_player(player: str, length: str, reason: str, is_ip: str):
 
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
-    interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply", "nadesreply", "help"]
+    interactor_commands = ["echo", "chatecho", "relay", "whitelist", "blacklist", "togglenadebotreply",
+                           "nadesreply", "speak", "mute", "triggers", "help"]
     whitelisted_accounts = read_config_row("whitelisted_accounts")
     if player in whitelisted_accounts:
         if command == "echo":
@@ -317,6 +318,20 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             whitelisted_accounts.remove(content.strip())
             set_config_row("whitelisted_accounts", whitelisted_accounts)
             send_custom_message(player, f"{content} has been removed from the whitelist.")
+        elif command == "triggers":
+            trigger_list = read_config_row("automod_flag_words")
+            split_sub_command = content.split(";")
+            subcommand = split_sub_command[0]
+            payload = split_sub_command[1]
+
+            if subcommand == "add":
+                trigger_list.append(payload.strip())
+                set_config_row("automod_flag_words", trigger_list)
+                send_custom_message(player, f"{content} has been added to automod triggers.")
+            elif subcommand == "remove":
+                trigger_list.remove(payload.strip())
+                set_config_row("automod_flag_words", trigger_list)
+                send_custom_message(player, f"{content} has been removed from the automod triggers.")
         elif command == "togglenadebotreply":
             global replace_nadebot
             replace_nadebot = not replace_nadebot
@@ -383,6 +398,17 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 help_string = "Sets a new reply string for Nadess bot commands. (nadesreply:reply_string) Current string is:"
                 send_custom_message(player, help_string)
                 send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
+            elif content == "triggers":
+                trigger_list = read_config_row("automod_flag_words")
+                help_string = f"Add/remove automod triggers. (triggers:add/remove;trigger)"
+                send_custom_message(player, help_string)
+                send_custom_message(player, f"Current triggers: {trigger_list}")
+            elif content == "speak":
+                help_string = "Relays text to chat as the bot. (speak:content)"
+                send_custom_message(player, help_string)
+            elif content == "mute":
+                help_string = "Mutes target player. (mute:player;reason;length;is_ip)"
+                send_custom_message(player, help_string)
             elif content == "help":
                 help_string = "Lists commands or gives a description of a command. (help:command)"
                 send_custom_message(player, help_string)
