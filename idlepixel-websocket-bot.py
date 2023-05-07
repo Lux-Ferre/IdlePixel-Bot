@@ -12,6 +12,13 @@ import ssl
 import sqlite3
 import json
 import base64
+from threading import Timer
+
+
+class RepeatTimer(Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
 
 
 def get_env_var(env_var: str) -> str:
@@ -444,8 +451,7 @@ def handle_modmod(player: str, command: str, content: str, callback_id: str):
         if content == "1:0":
             send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
         elif content == "0:0":
-            if player == "luxferre":
-                poll_online_mods()
+            pass
     elif command == "MODCHAT":
         send_modmod_message(payload=f"{player}: {content}", command="MSG", player="ALL")
     elif command == "MODLIST":
@@ -563,6 +569,9 @@ if __name__ == "__main__":
     if development_mode:
         testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
+    timer = RepeatTimer(60, poll_online_mods)
+    timer.start()
+
     websocket.enableTrace(False)
     ws = websocket.WebSocketApp("wss://server1.idle-pixel.com",
                                 on_open=on_ws_open,
@@ -575,3 +584,4 @@ if __name__ == "__main__":
                    sslopt={"cert_reqs": ssl.CERT_NONE})  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly, no SSL cert
     rel.signal(2, rel.abort)  # Keyboard Interrupt
     rel.dispatch()
+    timer.cancel()
