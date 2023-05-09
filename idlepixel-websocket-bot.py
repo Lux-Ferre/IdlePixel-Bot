@@ -255,6 +255,11 @@ def handle_chat_command(player: str, message: str):
                     "eepy": "https://prnt.sc/1u3qqxLhJXtO",
                     "pint": "https://prnt.sc/I9tS6s5bICce",
                     "water": "https://prnt.sc/5g1Ib9zxEv9Y",
+                    "teef": "https://prnt.sc/7g-tIATxEK7V",
+                    "happy": "https://prnt.sc/iSGQbrOSQOh7",
+                    "fennec": "https://prnt.sc/4yrevw1wODQc",
+                    "splish": "https://prnt.sc/aGvFjCjPhPkk",
+                    "uwot": "https://prnt.sc/ieU9eHGMqwKj",
                 }
                 if payload is not None:
                     try:
@@ -294,7 +299,10 @@ def handle_player_offline(player: str):
 
 
 def poll_online_mods():
-    send_modmod_message(command="HELLO", player="ALL", payload="0:0")
+    try:
+        send_modmod_message(command="HELLO", player="ALL", payload="0:0")
+    except:
+        print("Connection down.")
 
 
 def mute_player(player: str, length: str, reason: str, is_ip: str):
