@@ -1,5 +1,6 @@
 import asyncio
 import os
+import discord
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import websocket
@@ -100,7 +101,7 @@ def on_ws_message(ws, raw_message):
 
 
 def on_ws_error(ws, error):
-    pass
+    print(error)
 
 
 def on_ws_close(ws, close_status_code, close_msg):
@@ -123,7 +124,7 @@ def on_chat(data: str):
         "sigil": data_split[1],
         "tag": data_split[2],
         "level": data_split[3],
-        "message": data_split[4].replace("@", "")
+        "message": data_split[4]
     }
 
     now = datetime.now()
@@ -135,10 +136,16 @@ def on_chat(data: str):
 
     handle_automod(message_data)
 
-    if message_data["message"][0] == "!":
+    if len(message_data["message"]) == 0:
+        pass
+    elif message_data["message"][0] == "!":
         handle_chat_command(player=message_data["username"], message=message_data["message"])
         if development_mode:
             print(f'Chat command received: {message_data["message"]}')
+    elif len(message_data["message"]) > 4 and message_data["message"][:5] == "@mods":
+        note = message_data["message"][5:]
+        mod_call = f"{message_data['username']} is calling for a mod with note: {note}"
+        send_modmod_message(payload=mod_call, player="ALL", command="MSG")
 
 
 def handle_automod(data: dict):
@@ -147,7 +154,7 @@ def handle_automod(data: dict):
     message = data["message"].lower()
     for trigger in automod_flag_words:
         if trigger in message:
-            message_string = f"{data['username']} sent a message with the blacklisted word: {trigger}."
+            message_string = f"**{data['username']} has been muted for using the word: {trigger}**"
             send_modmod_message(payload=message_string, command="MSG", player="ALL")
             length = "24"
             reason = f"Using the word: {trigger}"
@@ -270,6 +277,9 @@ def handle_chat_command(player: str, message: str):
                     random_bear = random.choice(list(bear_links))
                     reply_string = f"Your random Bear is: {random_bear}: {bear_links[random_bear]}"
 
+                if player == "richie19942":
+                    reply_string = "Bawbag, " + reply_string
+
                 reply_needed = True
             elif sub_command == "import":
                 if payload == "antigravity":
@@ -296,6 +306,7 @@ def handle_player_offline(player: str):
         except ValueError:
             pass
         send_modmod_message(payload=f"{player} has logged out!", command="MSG", player="ALL")
+        send_modmod_message(payload=f"remove:{player}", command="LIST", player="ALL")
 
 
 def poll_online_mods():
@@ -458,6 +469,11 @@ def handle_modmod(player: str, command: str, content: str, callback_id: str):
     if command == "HELLO":
         if content == "1:0":
             send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
+            send_modmod_message(payload=f"add:{player}", command="LIST", player="ALL")
+            mod_string = ""
+            for mod in online_mods:
+                mod_string += f"{mod},"
+            send_modmod_message(payload=f"list:{mod_string[:-1]}", command="LIST", player=player)
         elif content == "0:0":
             pass
     elif command == "MODCHAT":
@@ -496,13 +512,13 @@ def send_chat_message(chat_string: str):
 
 def log_message(message: str):
     if development_mode:
-        testing_webhook.send(message)
+        testing_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
 
         with open('chat.log', 'a', encoding="utf-8") as the_file:
             the_file.write(message + '\n')
     else:
-        dh_webhook.send(message)
-        lbt_webhook.send(message)
+        dh_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
+        lbt_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
 
 
 def read_all_data():
