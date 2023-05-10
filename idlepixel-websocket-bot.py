@@ -238,6 +238,9 @@ def handle_chat_command(player: str, message: str):
             elif sub_command == "easter":
                 reply_string = f"https://greasyfork.org/en/scripts/463496-idlepixel-easter-2023-tracker"
                 reply_needed = True
+            elif sub_command == "dho_maps":
+                reply_string = f"https://www.reddit.com/r/DiamondHunt/comments/2su96k/treasure_map_riddles_spoilers/"
+                reply_needed = True
             elif sub_command == "scripts":
                 reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
                 reply_needed = True
