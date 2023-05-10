@@ -58,6 +58,4 @@ if __name__ == "__main__":
     con = sqlite3.connect("configs.db")
     cur = con.cursor()
 
-    set_config_row("whitelisted_accounts", ["lux", "axe", "luxferre", "luxchatter", "godofnades", "amyjane1991"])
-
     print(read_all_data())

@@ -239,7 +239,7 @@ def handle_chat_command(player: str, message: str):
                 reply_string = f"https://greasyfork.org/en/scripts/463496-idlepixel-easter-2023-tracker"
                 reply_needed = True
             elif sub_command == "dho_maps":
-                reply_string = f"https://www.reddit.com/r/DiamondHunt/comments/2su96k/treasure_map_riddles_spoilers/"
+                reply_string = f"Offline map solutions: https://prnt.sc/Mdd-AKMIHfLz"
                 reply_needed = True
             elif sub_command == "scripts":
                 reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
@@ -257,20 +257,7 @@ def handle_chat_command(player: str, message: str):
 
                 reply_needed = True
             elif sub_command == "bear":
-                bear_links = {
-                    "pupper": "https://prnt.sc/Cn1tKIrvZwOM",
-                    "derp": "https://prnt.sc/5gbSLOCE99cn",
-                    "jenga": "https://prnt.sc/5zEvSclW9BIQ",
-                    "vega": "https://prnt.sc/6Dtm8MSFaUEg",
-                    "eepy": "https://prnt.sc/1u3qqxLhJXtO",
-                    "pint": "https://prnt.sc/I9tS6s5bICce",
-                    "water": "https://prnt.sc/5g1Ib9zxEv9Y",
-                    "teef": "https://prnt.sc/7g-tIATxEK7V",
-                    "happy": "https://prnt.sc/iSGQbrOSQOh7",
-                    "fennec": "https://prnt.sc/4yrevw1wODQc",
-                    "splish": "https://prnt.sc/aGvFjCjPhPkk",
-                    "uwot": "https://prnt.sc/ieU9eHGMqwKj",
-                }
+                bear_links = read_config_row("bear_links")
                 if payload is not None:
                     try:
                         reply_string = bear_links[payload]
