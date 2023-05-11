@@ -245,7 +245,7 @@ def handle_chat_command(player: str, message: str):
                 reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
                 reply_needed = True
             elif sub_command == "vega":
-                vega_links = read_config_row("vega_links")
+                vega_links = get_pet_links("vega")
                 if payload is not None:
                     try:
                         reply_string = vega_links[payload]
@@ -257,7 +257,7 @@ def handle_chat_command(player: str, message: str):
 
                 reply_needed = True
             elif sub_command == "bear":
-                bear_links = read_config_row("bear_links")
+                bear_links = get_pet_links("bear")
                 if payload is not None:
                     try:
                         reply_string = bear_links[payload]
@@ -564,6 +564,23 @@ def set_config_row(key: str, value: str | list):
     cur.execute(query, params)
 
     con.commit()
+
+
+def get_pet_links(pet: str):
+    query = "SELECT title, link from pet_links WHERE pet=?"
+    params = (pet,)
+    res = cur.execute(query, params)
+
+    all_links = res.fetchall()
+    loaded_links = {}
+
+    for pet in all_links:
+        title = pet[0]
+        link = pet[1]
+
+        loaded_links[title] = link
+
+    return loaded_links
 
 
 if __name__ == "__main__":
