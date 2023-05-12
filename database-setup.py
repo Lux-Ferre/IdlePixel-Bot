@@ -126,4 +126,4 @@ if __name__ == "__main__":
 
     vega_links = get_pet_links("bobo")
 
-    print(vega_links)
+    print(len(get_pet_links("bobo")))

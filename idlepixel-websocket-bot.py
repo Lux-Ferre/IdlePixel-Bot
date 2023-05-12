@@ -271,6 +271,23 @@ def handle_chat_command(player: str, message: str):
                     reply_string = "Bawbag, " + reply_string
 
                 reply_needed = True
+            elif sub_command == "pet":
+                if payload is not None:
+                    query = "SELECT title, pet, link FROM pet_links WHERE pet=? ORDER BY RANDOM() LIMIT 1;"
+                    params = (payload,)
+                else:
+                    query = "SELECT title, pet, link FROM pet_links ORDER BY RANDOM() LIMIT 1;"
+                    params = tuple()
+
+                res = cur.execute(query, params)
+
+                pet_link = res.fetchone()
+                reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
+
+                if player == "richie19942":
+                    reply_string = "Bawbag, " + reply_string
+
+                reply_needed = True
             elif sub_command == "import":
                 if payload == "antigravity":
                     reply_string = "https://xkcd.com/353"
@@ -380,6 +397,23 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
         elif command == "speak":
             send_chat_message(content)
+        elif command == "pets":
+            split_sub_command = content.split(";")
+            if len(split_sub_command) != 4:
+                send_custom_message(player, f"Invalid syntax. (pets:add;pet;title;link)")
+            else:
+                subcommand = split_sub_command[0]
+                pet = split_sub_command[1]
+                title = split_sub_command[2]
+                link = split_sub_command[3]
+
+                pet_data = (title, pet, link)
+
+                if subcommand == "add":
+                    add_pet(pet_data)
+                    send_custom_message(player, f"{pet} link added with title: {title}")
+                elif subcommand == "remove":
+                    send_custom_message(player, f"Remove feature not added.")
         elif command == "mute":
             if content is None:
                 split_data = None
@@ -581,6 +615,14 @@ def get_pet_links(pet: str):
         loaded_links[title] = link
 
     return loaded_links
+
+
+def add_pet(pet_data: tuple):
+    query = "INSERT INTO pet_links VALUES (?, ?, ?)"
+
+    cur.execute(query, pet_data)
+
+    con.commit()
 
 
 if __name__ == "__main__":
