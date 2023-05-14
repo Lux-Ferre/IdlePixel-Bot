@@ -288,6 +288,21 @@ def handle_chat_command(player: str, message: str):
                     reply_string = "Bawbag, " + reply_string
 
                 reply_needed = True
+            elif sub_command == "pet_stats":
+                query = "SELECT pet, count(pet) AS tot_pet_count FROM pet_links GROUP BY pet ORDER BY tot_pet_count DESC;"
+                res = cur.execute(query)
+
+                all_stats = res.fetchall()
+
+                pet_list = ""
+
+                for stat in all_stats:
+                    pet, num = stat
+                    pet_list += f"({pet.capitalize()}: {num})"
+
+                formatted_stats = f"Current pet links: [{pet_list}]"
+
+                send_chat_message(formatted_stats)
             elif sub_command == "import":
                 if payload == "antigravity":
                     reply_string = "https://xkcd.com/353"
@@ -530,6 +545,7 @@ def send_custom_message(player: str, content: str):
 
 
 def send_chat_message(chat_string: str):
+    chat_string = chat_string.replace("richie19942", "Bawbag")
     chat_string = f"CHAT={chat_string}"
     ws.send(chat_string)
 
