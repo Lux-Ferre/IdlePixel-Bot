@@ -425,7 +425,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 pet_data = (title, pet, link)
 
                 if subcommand == "add":
-                    add_pet(pet_data)
+                    add_pet(pet_data, player)
                     send_custom_message(player, f"{pet} link added with title: {title}")
                 elif subcommand == "remove":
                     send_custom_message(player, f"Remove feature not added.")
@@ -636,10 +636,14 @@ def get_pet_links(pet: str):
     return loaded_links
 
 
-def add_pet(pet_data: tuple):
+def add_pet(pet_data: tuple, player: str):
     query = "INSERT INTO pet_links VALUES (?, ?, ?)"
 
-    cur.execute(query, pet_data)
+    try:
+        cur.execute(query, pet_data)
+    except sqlite3.IntegrityError as e:
+        print(e)
+        send_custom_message(player, f"Link not added, '{pet_data[0]}' already exists.")
 
     con.commit()
 

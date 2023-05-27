@@ -123,7 +123,12 @@ if __name__ == "__main__":
     # cur.executemany("INSERT INTO pet_links VALUES(?, ?, ?)", data)
     # con.commit()
     # cur.execute("CREATE TABLE pet_links(title, pet, link)")
+    # cur.execute("ALTER TABLE pet_links RENAME TO old_pet_links")
 
-    vega_links = get_pet_links("bobo")
+    print(get_pet_links("bobo"))
 
-    print(len(get_pet_links("bobo")))
+    cur.execute("INSERT INTO pet_links SELECT * FROM old_pet_links")
+
+    con.commit()
+
+    print(get_pet_links("bobo"))
