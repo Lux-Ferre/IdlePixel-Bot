@@ -222,9 +222,8 @@ def handle_chat_command(player: str, message: str):
             reply_needed = True
 
     if command[:7] == "!luxbot":
-        whitelisted_accounts = read_config_row("whitelisted_accounts")
-        ignore_accounts = read_config_row("ignore_accounts")
-        if player in whitelisted_accounts:
+        perm_level = permission_level(player)
+        if perm_level >= 1:
             try:
                 sub_command = command.split(":", 1)[1]
             except KeyError:
@@ -311,7 +310,7 @@ def handle_chat_command(player: str, message: str):
                 if sub_command is not None:
                     reply_string = f"Sorry {player}, that is an invalid LuxBot command."
                     reply_needed = True
-        elif player in ignore_accounts:
+        elif perm_level < 0:
             pass
         else:
             reply_string = f"Sorry {player}, you are not authorized to issue LuxBot commands."
@@ -347,8 +346,8 @@ def mute_player(player: str, length: str, reason: str, is_ip: str):
 def update_permission(player: str, updated_player: str, level: str):
     level = int(level)
 
-    if not 0 <= level <= 3:
-        send_custom_message(player, "Invalid permission level. Must be between 0 and 3.")
+    if not -1 <= level <= 3:
+        send_custom_message(player, "Invalid permission level. Must be between -1 and 3.")
         return
 
     query = """
@@ -370,16 +369,16 @@ def permission_level(player: str):
     res = cur.execute(query, params)
     level = res.fetchone()
     if level is None:
-        return None
+        return 0
     else:
         return level[0]
 
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
-                           "nadesreply", "speak", "mute", "permissions", "ignores", "triggers", "pets", "help", ]
+                           "nadesreply", "speak", "mute", "permissions", "triggers", "pets", "help", ]
     perm_level = permission_level(player)
-    if perm_level is None or perm_level < 2:
+    if perm_level < 2:
         send_custom_message(player, "403: Permission level 2 or greater required to interact with LuxBot.")
     elif perm_level >= 2:
         if command == "echo":
@@ -391,19 +390,6 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             recipient = content.split(":")[0]
             message = content.split(":")[1]
             send_custom_message(recipient, message)
-        elif command == "ignores":
-            ignores = read_config_row("ignore_accounts")
-            split_sub_command = content.split(";")
-            subcommand = split_sub_command[0]
-            payload = split_sub_command[1]
-            if subcommand == "add":
-                ignores.append(payload.strip())
-                set_config_row("ignore_accounts", ignores)
-                send_custom_message(player, f"{payload} has been added to the LuxBot ignore list.")
-            elif subcommand == "remove":
-                ignores.remove(payload.strip())
-                set_config_row("ignore_accounts", ignores)
-                send_custom_message(player, f"{payload} has been removed from the LuxBot ignore list.")
         elif command == "triggers":
             trigger_list = read_config_row("automod_flag_words")
             split_sub_command = content.split(";")
@@ -465,11 +451,6 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             elif content == "relay":
                 help_string = "Passes on message to another account. (relay:account:message)"
                 send_custom_message(player, help_string)
-            elif content == "whitelist":
-                whitelist = read_config_row("whitelisted_accounts")
-                help_string = f"Add/remove accounts from whitelist. (whitelist:add/remove;account)"
-                send_custom_message(player, help_string)
-                send_custom_message(player, f"Current whitelist: {whitelist}")
             elif content == "togglenadebotreply":
                 help_string = "Toggles bot responses to Nadess bot commands."
                 send_custom_message(player, help_string)
@@ -483,11 +464,6 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 help_string = f"Add/remove automod triggers. (triggers:add/remove;trigger)"
                 send_custom_message(player, help_string)
                 send_custom_message(player, f"Current triggers: {trigger_list}")
-            elif content == "ignores":
-                ignores = read_config_row("ignore_accounts")
-                help_string = f"Add/remove to/from LuxBot ignore list. (ignores:add/remove;account)"
-                send_custom_message(player, help_string)
-                send_custom_message(player, f"Current ignore list: {ignores}")
             elif content == "speak":
                 help_string = "Relays text to chat as the bot. (speak:content)"
                 send_custom_message(player, help_string)

@@ -105,6 +105,6 @@ if __name__ == "__main__":
     # cur.execute("CREATE TABLE permissions(user UNIQUE, level)")
     # con.commit()
 
-    print(permission_level("luxferre"))
+    print(read_table("permissions"))
 
 
