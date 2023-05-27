@@ -346,7 +346,7 @@ def mute_player(player: str, length: str, reason: str, is_ip: str):
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
-                           "nadesreply", "speak", "mute", "whitelist", "ignores", "triggers", "help"]
+                           "nadesreply", "speak", "mute", "whitelist", "ignores", "triggers", "pets", "help", ]
     whitelisted_accounts = read_config_row("whitelisted_accounts")
     if player in whitelisted_accounts:
         if command == "echo":
@@ -490,6 +490,9 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 send_custom_message(player, help_string)
             elif content == "mute":
                 help_string = "Mutes target player. (mute:player;reason;length;is_ip)"
+                send_custom_message(player, help_string)
+            elif content == "pets":
+                help_string = "Interacts with the pets database. (pets:add/remove;pet;title;link)"
                 send_custom_message(player, help_string)
             elif content == "help":
                 help_string = "Lists commands or gives a description of a command. (help:command)"
