@@ -40,6 +40,18 @@ def read_table(table: str):
     return res.fetchall()
 
 
+def permission_level(player: str):
+    query = "SELECT level FROM permissions WHERE user=?"
+    params = (player, )
+
+    res = cur.execute(query, params)
+    level = res.fetchone()
+    if level is None:
+        return None
+    else:
+        return level[0]
+
+
 def read_all_pets():
     res = cur.execute("SELECT title, pet, link from pet_links")
     all_links = res.fetchall()
@@ -93,4 +105,6 @@ if __name__ == "__main__":
     # cur.execute("CREATE TABLE permissions(user UNIQUE, level)")
     # con.commit()
 
-    print(read_table("permissions"))
+    print(permission_level("luxferre"))
+
+

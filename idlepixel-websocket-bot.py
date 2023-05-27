@@ -363,11 +363,25 @@ def update_permission(player: str, updated_player: str, level: str):
     send_custom_message(player, f"{updated_player} permission level set to {level}.")
 
 
+def permission_level(player: str):
+    query = "SELECT level FROM permissions WHERE user=?"
+    params = (player, )
+
+    res = cur.execute(query, params)
+    level = res.fetchone()
+    if level is None:
+        return None
+    else:
+        return level[0]
+
+
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
                            "nadesreply", "speak", "mute", "permissions", "ignores", "triggers", "pets", "help", ]
-    whitelisted_accounts = read_config_row("whitelisted_accounts")
-    if player in whitelisted_accounts:
+    perm_level = permission_level(player)
+    if perm_level is None or perm_level < 2:
+        send_custom_message(player, "403: Permission level 2 or greater required to interact with LuxBot.")
+    elif perm_level >= 2:
         if command == "echo":
             send_custom_message(player, content)
         elif command == "chatecho":
@@ -377,15 +391,6 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             recipient = content.split(":")[0]
             message = content.split(":")[1]
             send_custom_message(recipient, message)
-        elif command == "permissions":
-            split_command = content.split(";")
-            if len(split_command) == 2:
-                updated_player = split_command[0]
-                level = split_command[1]
-                update_permission(player, updated_player, level)
-            else:
-                send_custom_message(player, "Invalid syntax. Must be of form 'permissions:player;level'")
-
         elif command == "ignores":
             ignores = read_config_row("ignore_accounts")
             split_sub_command = content.split(";")
@@ -444,23 +449,6 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                     send_custom_message(player, f"{pet} link added with title: {title}")
                 elif subcommand == "remove":
                     send_custom_message(player, f"Remove feature not added.")
-        elif command == "mute":
-            if content is None:
-                split_data = None
-                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
-            else:
-                split_data = content.split(";")
-
-            if len(split_data) == 4 and split_data is not None:
-                target = split_data[0]
-                reason = split_data[1]
-                length = split_data[2]
-                is_ip = split_data[3]
-
-                mute_player(target, length, reason, is_ip)
-                send_custom_message(player, f"{target} has been successfully muted for {length} hours.")
-            else:
-                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
         elif command == "help":
             if content is None:
                 help_string = "Command List"
@@ -515,10 +503,37 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             else:
                 help_string = "Invalid help command. Should be of format (help:command)"
                 send_custom_message(player, help_string)
+        elif command in ["permissions", "mute"]:
+            if perm_level < 3:
+                send_custom_message(player, "403: Permission level 3 required.")
         else:
             send_custom_message(player, f"{command} is not a valid interactor command.")
-    else:
-        send_custom_message(player, "403: Interactor request denied. Account not approved.")
+    if perm_level >= 3:
+        if command == "permissions":
+            split_command = content.split(";")
+            if len(split_command) == 2:
+                updated_player = split_command[0]
+                level = split_command[1]
+                update_permission(player, updated_player, level)
+            else:
+                send_custom_message(player, "Invalid syntax. Must be of form 'permissions:player;level'")
+        elif command == "mute":
+            if content is None:
+                split_data = None
+                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
+            else:
+                split_data = content.split(";")
+
+            if len(split_data) == 4 and split_data is not None:
+                target = split_data[0]
+                reason = split_data[1]
+                length = split_data[2]
+                is_ip = split_data[3]
+
+                mute_player(target, length, reason, is_ip)
+                send_custom_message(player, f"{target} has been successfully muted for {length} hours.")
+            else:
+                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
 
 
 def handle_modmod(player: str, command: str, content: str, callback_id: str):
