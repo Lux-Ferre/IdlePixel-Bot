@@ -344,9 +344,28 @@ def mute_player(player: str, length: str, reason: str, is_ip: str):
     ws.send(f"{mute_string}")
 
 
+def update_permission(player: str, updated_player: str, level: str):
+    level = int(level)
+
+    if not 0 <= level <= 3:
+        send_custom_message(player, "Invalid permission level. Must be between 0 and 3.")
+        return
+
+    query = """
+                INSERT INTO permissions(user, level) VALUES(?1, ?2)
+                ON CONFLICT(user) DO UPDATE SET level=?2
+            """
+    params = (updated_player, level)
+    cur.execute(query, params)
+
+    con.commit()
+
+    send_custom_message(player, f"{updated_player} permission level set to {level}.")
+
+
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
-                           "nadesreply", "speak", "mute", "whitelist", "ignores", "triggers", "pets", "help", ]
+                           "nadesreply", "speak", "mute", "permissions", "ignores", "triggers", "pets", "help", ]
     whitelisted_accounts = read_config_row("whitelisted_accounts")
     if player in whitelisted_accounts:
         if command == "echo":
@@ -358,19 +377,15 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             recipient = content.split(":")[0]
             message = content.split(":")[1]
             send_custom_message(recipient, message)
-        elif command == "whitelist":
-            whitelist = read_config_row("whitelisted_accounts")
-            split_sub_command = content.split(";")
-            subcommand = split_sub_command[0]
-            payload = split_sub_command[1]
-            if subcommand == "add":
-                whitelist.append(payload.strip())
-                set_config_row("whitelisted_accounts", whitelist)
-                send_custom_message(player, f"{payload} has been added to the LuxBot whitelist.")
-            elif subcommand == "remove":
-                whitelist.remove(payload.strip())
-                set_config_row("whitelisted_accounts", whitelist)
-                send_custom_message(player, f"{payload} has been removed from the LuxBot whitelist.")
+        elif command == "permissions":
+            split_command = content.split(";")
+            if len(split_command) == 2:
+                updated_player = split_command[0]
+                level = split_command[1]
+                update_permission(player, updated_player, level)
+            else:
+                send_custom_message(player, "Invalid syntax. Must be of form 'permissions:player;level'")
+
         elif command == "ignores":
             ignores = read_config_row("ignore_accounts")
             split_sub_command = content.split(";")
@@ -583,7 +598,7 @@ def read_all_data():
     return loaded_configs
 
 
-def add_row_to_database(key: str, value: str | list):
+def add_config_to_database(key: str, value: str | list):
     stringified_value = json.dumps(value)
     encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
 
