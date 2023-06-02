@@ -13,6 +13,7 @@ import ssl
 import sqlite3
 import json
 import base64
+import textwrap
 from threading import Timer
 
 
@@ -96,6 +97,8 @@ def on_ws_message(ws, raw_message):
         on_yell(message_data)
     elif message_type == "CUSTOM":
         on_custom(message_data)
+    elif message_type == "OPEN_DIALOGUE":
+        on_dialogue(message_data)
     else:
         print(f"{message_type}: {message_data}")
 
@@ -171,6 +174,16 @@ def on_yell(data: str):
     formatted_chat = f'*[{current_time}]* **SERVER MESSAGE:** {data} '
 
     log_message(formatted_chat)
+
+
+def on_dialogue(data: str):
+    if data[:5] == "WHOIS":
+        cropped_data = data[15:]
+        whois_list = cropped_data.split("<br />")[:-1]
+        for account in lux_accounts:
+            send_custom_message(account, "WHOIS:" + str(whois_list))
+    else:
+        print(data)
 
 
 def on_custom(data: str):
@@ -376,7 +389,7 @@ def permission_level(player: str):
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
-                           "nadesreply", "speak", "mute", "permissions", "triggers", "pets", "help", ]
+                           "nadesreply", "speak", "mute", "permissions", "triggers", "pets", "help", "whois", ]
     perm_level = permission_level(player)
     if perm_level < 2:
         send_custom_message(player, "403: Permission level 2 or greater required to interact with LuxBot.")
@@ -473,13 +486,24 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             elif content == "pets":
                 help_string = "Interacts with the pets database. (pets:add/remove;pet;title;link)"
                 send_custom_message(player, help_string)
+            elif content == "permissions":
+                help_string = "Modifies player permissions. (permissions:player:level)"
+                send_custom_message(player, help_string)
+
+                query = f"SELECT * FROM permissions"
+                res = cur.execute(query).fetchall()
+                perms_string = f"Current permissions: {res}"
+                wrapped_message = textwrap.wrap(perms_string, 240)
+                for message in wrapped_message:
+                    send_custom_message(player, message)
+
             elif content == "help":
                 help_string = "Lists commands or gives a description of a command. (help:command)"
                 send_custom_message(player, help_string)
             else:
                 help_string = "Invalid help command. Should be of format (help:command)"
                 send_custom_message(player, help_string)
-        elif command in ["permissions", "mute"]:
+        elif command in ["permissions", "mute", "whois", ]:
             if perm_level < 3:
                 send_custom_message(player, "403: Permission level 3 required.")
         else:
@@ -510,6 +534,11 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 send_custom_message(player, f"{target} has been successfully muted for {length} hours.")
             else:
                 send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
+        elif command == "whois":
+            if content is None:
+                send_custom_message(player, "Invalid syntax. Specify a target.")
+            else:
+                send_chat_message(f"/whois {content}")
 
 
 def handle_modmod(player: str, command: str, content: str, callback_id: str):
@@ -658,6 +687,7 @@ if __name__ == "__main__":
     env_consts = set_env_consts()
     development_mode = is_development_mode()
     online_mods = set()
+    lux_accounts = ["luxferre", "lux", "axe", "luxchatter"]
 
     con = sqlite3.connect("configs.db")
     cur = con.cursor()
