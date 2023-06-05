@@ -187,7 +187,7 @@ def on_dialogue(data: str):
 
 
 def on_custom(data: str):
-    [player, data_packet] = data.split("~")
+    [player, data_packet] = data.split("~", 1)
 
     if data_packet == "PLAYER_OFFLINE":
         handle_player_offline(player)
@@ -387,6 +387,10 @@ def permission_level(player: str):
         return level[0]
 
 
+def send_generic(command: str):
+    ws.send(command)
+
+
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
                            "nadesreply", "speak", "mute", "permissions", "triggers", "pets", "help", "whois", ]
@@ -448,6 +452,9 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                     send_custom_message(player, f"{pet} link added with title: {title}")
                 elif subcommand == "remove":
                     send_custom_message(player, f"Remove feature not added.")
+        elif command == "generic":
+            send_generic(content)
+            send_custom_message(player, f"Generic websocket command sent: {content}")
         elif command == "help":
             if content is None:
                 help_string = "Command List"
