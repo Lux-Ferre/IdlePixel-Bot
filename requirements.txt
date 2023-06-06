@@ -1,0 +1,6 @@
+websocket-client>=1.5.1
+rel>=0.4.8
+playwright>=1.32.1
+beautifulsoup4>=4.12.2
+requests>=2.29.0
+discord.py>=2.2.2
