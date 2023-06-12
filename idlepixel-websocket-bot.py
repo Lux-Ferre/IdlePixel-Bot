@@ -16,6 +16,8 @@ import base64
 import textwrap
 from threading import Timer
 
+import utils
+
 
 class RepeatTimer(Timer):
     def run(self):
@@ -392,8 +394,8 @@ def send_generic(command: str):
 
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
-    interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply",
-                           "nadesreply", "speak", "mute", "permissions", "triggers", "pets", "help", "whois", ]
+    interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply", "nadesreply", "speak", "mute",
+                           "permissions", "triggers", "pets", "help", "whois", "generic", ]
     perm_level = permission_level(player)
     if perm_level < 2:
         send_custom_message(player, "403: Permission level 2 or greater required to interact with LuxBot.")
@@ -452,9 +454,6 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                     send_custom_message(player, f"{pet} link added with title: {title}")
                 elif subcommand == "remove":
                     send_custom_message(player, f"Remove feature not added.")
-        elif command == "generic":
-            send_generic(content)
-            send_custom_message(player, f"Generic websocket command sent: {content}")
         elif command == "help":
             if content is None:
                 help_string = "Command List"
@@ -462,41 +461,17 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                     help_string += f" | {com}"
                 send_custom_message(player, help_string)
                 send_custom_message(player, "help:command will give a brief description of the command.")
-            elif content == "echo":
-                help_string = "Echos message as custom. (echo:message)"
+            else:
+                help_string = utils.get_help_string(content)
                 send_custom_message(player, help_string)
-            elif content == "chatecho":
-                help_string = "Echos message into chat. (chatecho:message)"
-                send_custom_message(player, help_string)
-            elif content == "relay":
-                help_string = "Passes on message to another account. (relay:account:message)"
-                send_custom_message(player, help_string)
-            elif content == "togglenadebotreply":
-                help_string = "Toggles bot responses to Nadess bot commands."
-                send_custom_message(player, help_string)
-            elif content == "nadesreply":
+
+            if content == "nadesreply":
                 nadebot_reply = read_config_row("nadebot_reply")
-                help_string = "Sets a new reply string for Nadess bot commands. (nadesreply:reply_string) Current string is:"
-                send_custom_message(player, help_string)
                 send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
             elif content == "triggers":
                 trigger_list = read_config_row("automod_flag_words")
-                help_string = f"Add/remove automod triggers. (triggers:add/remove;trigger)"
-                send_custom_message(player, help_string)
                 send_custom_message(player, f"Current triggers: {trigger_list}")
-            elif content == "speak":
-                help_string = "Relays text to chat as the bot. (speak:content)"
-                send_custom_message(player, help_string)
-            elif content == "mute":
-                help_string = "Mutes target player. (mute:player;reason;length;is_ip)"
-                send_custom_message(player, help_string)
-            elif content == "pets":
-                help_string = "Interacts with the pets database. (pets:add/remove;pet;title;link)"
-                send_custom_message(player, help_string)
             elif content == "permissions":
-                help_string = "Modifies player permissions. (permissions:player:level)"
-                send_custom_message(player, help_string)
-
                 query = f"SELECT * FROM permissions"
                 res = cur.execute(query).fetchall()
                 perms_string = f"Current permissions: {res}"
@@ -504,13 +479,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 for message in wrapped_message:
                     send_custom_message(player, message)
 
-            elif content == "help":
-                help_string = "Lists commands or gives a description of a command. (help:command)"
-                send_custom_message(player, help_string)
-            else:
-                help_string = "Invalid help command. Should be of format (help:command)"
-                send_custom_message(player, help_string)
-        elif command in ["permissions", "mute", "whois", ]:
+        elif command in ["permissions", "mute", "whois", "generic"]:
             if perm_level < 3:
                 send_custom_message(player, "403: Permission level 3 required.")
         else:
@@ -546,6 +515,9 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 send_custom_message(player, "Invalid syntax. Specify a target.")
             else:
                 send_chat_message(f"/whois {content}")
+        elif command == "generic":
+            send_generic(content)
+            send_custom_message(player, f"Generic websocket command sent: {content}")
 
 
 def handle_modmod(player: str, command: str, content: str, callback_id: str):
