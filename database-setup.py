@@ -96,6 +96,15 @@ def set_config_row(key: str, value: str | list):
     con.commit()
 
 
+def remove_config_row(key: str):
+    query = "DELETE FROM configs WHERE config=?"
+
+    params = (key, )
+    cur.execute(query, params)
+
+    con.commit()
+
+
 if __name__ == "__main__":
     con = sqlite3.connect("configs.db")
     cur = con.cursor()
@@ -105,6 +114,4 @@ if __name__ == "__main__":
     # cur.execute("CREATE TABLE permissions(user UNIQUE, level)")
     # con.commit()
 
-    print(read_table("permissions"))
-
-
+    print(read_all_configs())
