@@ -182,6 +182,7 @@ def on_dialogue(data: str):
     if data[:5] == "WHOIS":
         cropped_data = data[15:]
         whois_list = cropped_data.split("<br />")[:-1]
+
         for account in lux_accounts:
             send_custom_message(account, "WHOIS:" + str(whois_list))
     else:
@@ -293,9 +294,7 @@ def handle_chat_command(player: str, message: str):
                     query = "SELECT title, pet, link FROM pet_links ORDER BY RANDOM() LIMIT 1;"
                     params = tuple()
 
-                res = cur.execute(query, params)
-
-                pet_link = res.fetchone()
+                pet_link = fetch_db(query, params, False)
                 reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
 
                 if player == "richie19942":
@@ -304,9 +303,8 @@ def handle_chat_command(player: str, message: str):
                 reply_needed = True
             elif sub_command == "pet_stats":
                 query = "SELECT pet, count(pet) AS tot_pet_count FROM pet_links GROUP BY pet ORDER BY tot_pet_count DESC;"
-                res = cur.execute(query)
-
-                all_stats = res.fetchall()
+                params = tuple()
+                all_stats = fetch_db(query, params, True)
 
                 pet_list = ""
 
@@ -370,9 +368,7 @@ def update_permission(player: str, updated_player: str, level: str):
                 ON CONFLICT(user) DO UPDATE SET level=?2
             """
     params = (updated_player, level)
-    cur.execute(query, params)
-
-    con.commit()
+    set_db(query, params)
 
     send_custom_message(player, f"{updated_player} permission level set to {level}.")
 
@@ -381,8 +377,7 @@ def permission_level(player: str):
     query = "SELECT level FROM permissions WHERE user=?"
     params = (player, )
 
-    res = cur.execute(query, params)
-    level = res.fetchone()
+    level = fetch_db(query, params, False)
     if level is None:
         return 0
     else:
@@ -473,8 +468,9 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 send_custom_message(player, f"Current triggers: {trigger_list}")
             elif content == "permissions":
                 query = f"SELECT * FROM permissions"
-                res = cur.execute(query).fetchall()
-                perms_string = f"Current permissions: {res}"
+                params = tuple()
+                perms_list = fetch_db(query, params, True)
+                perms_string = f"Current permissions: {perms_list}"
                 wrapped_message = textwrap.wrap(perms_string, 240)
                 for message in wrapped_message:
                     send_custom_message(player, message)
@@ -578,25 +574,6 @@ def log_message(message: str):
         lbt_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
 
 
-def read_all_data():
-    res = cur.execute("SELECT config, data from configs")
-    encoded_configs = res.fetchall()
-    loaded_configs = {}
-
-    for config in encoded_configs:
-        key = config[0]
-        encoded_value = config[1]
-
-        if isinstance(encoded_value, str):
-            decoded_value = encoded_value
-        else:
-            decoded_value = json.loads(base64.b64decode(encoded_value))
-
-        loaded_configs[key] = decoded_value
-
-    return loaded_configs
-
-
 def add_config_to_database(key: str, value: str | list):
     stringified_value = json.dumps(value)
     encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
@@ -604,16 +581,14 @@ def add_config_to_database(key: str, value: str | list):
     query = "INSERT INTO configs VALUES (?, ?)"
     params = (key, encoded_string)
 
-    cur.execute(query, params)
-
-    con.commit()
+    set_db(query, params)
 
 
 def read_config_row(key: str) -> list | str | dict:
     query = "SELECT data FROM configs WHERE config=?"
     params = (key, )
-    res = cur.execute(query, params)
-    encoded_config = res.fetchone()[0]
+
+    encoded_config = fetch_db(query, params, False)[0]
     decoded_config = json.loads(base64.b64decode(encoded_config))
 
     if development_mode:
@@ -628,17 +603,15 @@ def set_config_row(key: str, value: str | list):
     encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
 
     params = (encoded_string, key)
-    cur.execute(query, params)
 
-    con.commit()
+    set_db(query, params)
 
 
 def get_pet_links(pet: str):
     query = "SELECT title, link from pet_links WHERE pet=?"
     params = (pet,)
-    res = cur.execute(query, params)
 
-    all_links = res.fetchall()
+    all_links = fetch_db(query, params, True)
     loaded_links = {}
 
     for pet in all_links:
@@ -654,10 +627,34 @@ def add_pet(pet_data: tuple, player: str):
     query = "INSERT INTO pet_links VALUES (?, ?, ?)"
 
     try:
-        cur.execute(query, pet_data)
+        set_db(query, pet_data)
     except sqlite3.IntegrityError as e:
         print(e)
         send_custom_message(player, f"Link not added, '{pet_data[0]}' already exists.")
+
+
+def fetch_db(query: str, params: tuple, many: bool):
+    con = sqlite3.connect("configs.db")
+    cur = con.cursor()
+
+    if params:
+        res = cur.execute(query, params)
+    else:
+        res = cur.execute(query)
+
+    if many:
+        data = res.fetchall()
+    else:
+        data = res.fetchone()
+
+    return data
+
+
+def set_db(query: str, params: tuple):
+    con = sqlite3.connect("configs.db")
+    cur = con.cursor()
+
+    cur.execute(query, params)
 
     con.commit()
 
@@ -667,11 +664,6 @@ if __name__ == "__main__":
     development_mode = is_development_mode()
     online_mods = set()
     lux_accounts = ["luxferre", "lux", "axe", "luxchatter"]
-
-    con = sqlite3.connect("configs.db")
-    cur = con.cursor()
-
-    all_configs = read_all_data()
 
     replace_nadebot = False
 
