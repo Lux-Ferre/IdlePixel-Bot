@@ -294,7 +294,7 @@ def handle_chat_command(player: str, message: str):
                     query = "SELECT title, pet, link FROM pet_links ORDER BY RANDOM() LIMIT 1;"
                     params = tuple()
 
-                pet_link = fetch_db(query, params, False)
+                pet_link = utils.fetch_db(query, params, False)
                 reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
 
                 if player == "richie19942":
@@ -304,7 +304,7 @@ def handle_chat_command(player: str, message: str):
             elif sub_command == "pet_stats":
                 query = "SELECT pet, count(pet) AS tot_pet_count FROM pet_links GROUP BY pet ORDER BY tot_pet_count DESC;"
                 params = tuple()
-                all_stats = fetch_db(query, params, True)
+                all_stats = utils.fetch_db(query, params, True)
 
                 pet_list = ""
 
@@ -368,7 +368,7 @@ def update_permission(player: str, updated_player: str, level: str):
                 ON CONFLICT(user) DO UPDATE SET level=?2
             """
     params = (updated_player, level)
-    set_db(query, params)
+    utils.set_db(query, params)
 
     send_custom_message(player, f"{updated_player} permission level set to {level}.")
 
@@ -377,7 +377,7 @@ def permission_level(player: str):
     query = "SELECT level FROM permissions WHERE user=?"
     params = (player, )
 
-    level = fetch_db(query, params, False)
+    level = utils.fetch_db(query, params, False)
     if level is None:
         return 0
     else:
@@ -469,7 +469,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             elif content == "permissions":
                 query = f"SELECT * FROM permissions"
                 params = tuple()
-                perms_list = fetch_db(query, params, True)
+                perms_list = utils.fetch_db(query, params, True)
                 perms_string = f"Current permissions: {perms_list}"
                 wrapped_message = textwrap.wrap(perms_string, 240)
                 for message in wrapped_message:
@@ -581,14 +581,14 @@ def add_config_to_database(key: str, value: str | list):
     query = "INSERT INTO configs VALUES (?, ?)"
     params = (key, encoded_string)
 
-    set_db(query, params)
+    utils.set_db(query, params)
 
 
 def read_config_row(key: str) -> list | str | dict:
     query = "SELECT data FROM configs WHERE config=?"
     params = (key, )
 
-    encoded_config = fetch_db(query, params, False)[0]
+    encoded_config = utils.fetch_db(query, params, False)[0]
     decoded_config = json.loads(base64.b64decode(encoded_config))
 
     if development_mode:
@@ -604,14 +604,14 @@ def set_config_row(key: str, value: str | list):
 
     params = (encoded_string, key)
 
-    set_db(query, params)
+    utils.set_db(query, params)
 
 
 def get_pet_links(pet: str):
     query = "SELECT title, link from pet_links WHERE pet=?"
     params = (pet,)
 
-    all_links = fetch_db(query, params, True)
+    all_links = utils.fetch_db(query, params, True)
     loaded_links = {}
 
     for pet in all_links:
@@ -627,36 +627,10 @@ def add_pet(pet_data: tuple, player: str):
     query = "INSERT INTO pet_links VALUES (?, ?, ?)"
 
     try:
-        set_db(query, pet_data)
+        utils.set_db(query, pet_data)
     except sqlite3.IntegrityError as e:
         print(e)
         send_custom_message(player, f"Link not added, '{pet_data[0]}' already exists.")
-
-
-def fetch_db(query: str, params: tuple, many: bool):
-    con = sqlite3.connect("configs.db")
-    cur = con.cursor()
-
-    if params:
-        res = cur.execute(query, params)
-    else:
-        res = cur.execute(query)
-
-    if many:
-        data = res.fetchall()
-    else:
-        data = res.fetchone()
-
-    return data
-
-
-def set_db(query: str, params: tuple):
-    con = sqlite3.connect("configs.db")
-    cur = con.cursor()
-
-    cur.execute(query, params)
-
-    con.commit()
 
 
 if __name__ == "__main__":

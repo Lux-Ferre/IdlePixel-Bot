@@ -1,3 +1,6 @@
+import sqlite3
+
+
 def get_help_string(command: str):
     if command == "echo":
         help_string = "Echos message as custom. (echo:message)"
@@ -27,3 +30,29 @@ def get_help_string(command: str):
         help_string = "Invalid help command. Should be of format (help:command)"
 
     return help_string
+
+
+def fetch_db(query: str, params: tuple, many: bool):
+    con = sqlite3.connect("configs.db")
+    cur = con.cursor()
+
+    if params:
+        res = cur.execute(query, params)
+    else:
+        res = cur.execute(query)
+
+    if many:
+        data = res.fetchall()
+    else:
+        data = res.fetchone()
+
+    return data
+
+
+def set_db(query: str, params: tuple):
+    con = sqlite3.connect("configs.db")
+    cur = con.cursor()
+
+    cur.execute(query, params)
+
+    con.commit()
