@@ -398,7 +398,7 @@ def send_generic(command: str):
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
     interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply", "nadesreply", "speak", "mute",
-                           "permissions", "triggers", "pets", "help", "whois", "generic", ]
+                           "permissions", "triggers", "pets", "help", "whois", "generic", "pet_titles", ]
     perm_level = permission_level(player)
     if perm_level < 2:
         send_custom_message(player, "Permission level 2 or greater required to interact with LuxBot.")
@@ -440,6 +440,18 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
         elif command == "speak":
             send_chat_message(content)
+        elif command == "pet_titles":
+            query = "SELECT title FROM pet_links"
+            params = tuple()
+            raw_title_list = utils.fetch_db(query, params, True)
+            title_list = []
+            for title_tuple in raw_title_list:
+                title_list.append(title_tuple[0].capitalize())
+            stringified_list = ", ".join(title_list)
+            title_string = f"{stringified_list}"
+            wrapped_message = textwrap.wrap(title_string, 240)
+            for message in wrapped_message:
+                send_custom_message(player, message)
         elif command == "pets":
             split_sub_command = content.split(";")
             if len(split_sub_command) != 4:
