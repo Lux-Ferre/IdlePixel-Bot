@@ -15,6 +15,7 @@ import json
 import base64
 import textwrap
 from threading import Timer
+import traceback
 
 import utils
 
@@ -106,7 +107,7 @@ def on_ws_message(ws, raw_message):
 
 
 def on_ws_error(ws, error):
-    print(error)
+    traceback.print_tb(error.__traceback__)
 
 
 def on_ws_close(ws, close_status_code, close_msg):
@@ -183,7 +184,14 @@ def on_dialogue(data: str):
         cropped_data = data[15:]
         whois_list = cropped_data.split("<br />")[:-1]
 
-        for account in lux_accounts:
+        query = "SELECT user FROM permissions WHERE level=3"
+        params = tuple()
+
+        account_list = utils.fetch_db(query, params, True)
+
+        level_three_accounts = [x[0] for x in account_list]
+
+        for account in level_three_accounts:
             send_custom_message(account, "WHOIS:" + str(whois_list))
     else:
         print(data)
@@ -250,8 +258,8 @@ def handle_chat_command(player: str, message: str):
             if sub_command == "echo":
                 reply_string = f"Echo: {player}: {payload}"
                 reply_needed = True
-            elif sub_command == "easter":
-                reply_string = f"https://greasyfork.org/en/scripts/463496-idlepixel-easter-2023-tracker"
+            elif sub_command == "combat":
+                reply_string = f"https://idle-pixel.wiki/index.php/Combat_Guide"
                 reply_needed = True
             elif sub_command == "dho_maps":
                 reply_string = f"Offline map solutions: https://prnt.sc/Mdd-AKMIHfLz"
@@ -393,7 +401,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                            "permissions", "triggers", "pets", "help", "whois", "generic", ]
     perm_level = permission_level(player)
     if perm_level < 2:
-        send_custom_message(player, "403: Permission level 2 or greater required to interact with LuxBot.")
+        send_custom_message(player, "Permission level 2 or greater required to interact with LuxBot.")
     elif perm_level >= 2:
         if command == "echo":
             send_custom_message(player, content)
@@ -477,7 +485,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
 
         elif command in ["permissions", "mute", "whois", "generic"]:
             if perm_level < 3:
-                send_custom_message(player, "403: Permission level 3 required.")
+                send_custom_message(player, "Permission level 3 required.")
         else:
             send_custom_message(player, f"{command} is not a valid interactor command.")
     if perm_level >= 3:
@@ -637,7 +645,6 @@ if __name__ == "__main__":
     env_consts = set_env_consts()
     development_mode = is_development_mode()
     online_mods = set()
-    lux_accounts = ["luxferre", "lux", "axe", "luxchatter"]
 
     replace_nadebot = False
 
