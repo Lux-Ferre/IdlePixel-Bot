@@ -231,7 +231,7 @@ def on_custom(data: str):
 def handle_chat_command(player: str, message: str):
     reply_string = ""
     reply_needed = False
-    split_message = message.split(" ", 1)
+    split_message = message.lower().split(" ", 1)
     command = split_message[0]
     if len(split_message) > 1:
         payload = split_message[1]
@@ -310,7 +310,11 @@ def handle_chat_command(player: str, message: str):
                     params = tuple()
 
                 pet_link = utils.fetch_db(query, params, False)
-                reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
+
+                if pet_link is None:
+                    reply_string = f"Sorry {player.capitalize()}, that is an invalid pet name."
+                else:
+                    reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
 
                 if player == "richie19942":
                     reply_string = "Bawbag, " + reply_string
