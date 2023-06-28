@@ -279,6 +279,13 @@ def handle_chat_command(player: str, message: str):
                     reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
 
                 reply_needed = True
+            elif sub_command == "wiki":
+                if payload is not None:
+                    reply_string = f"Wiki page for {payload}: https://idle-pixel.wiki/index.php/{payload.capitalize()}"
+                else:
+                    reply_string = f"Wiki home page: https://idle-pixel.wiki/index.php/Main_Page"
+
+                reply_needed = True
             elif sub_command == "bear":
                 bear_links = get_pet_links("bear")
                 if payload is not None:
