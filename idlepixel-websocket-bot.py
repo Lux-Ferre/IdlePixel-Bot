@@ -1,6 +1,7 @@
 import asyncio
 import os
 import discord
+import requests
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import websocket
@@ -331,11 +332,11 @@ def handle_chat_command(player: str, message: str):
 
                 for stat in all_stats:
                     pet, num = stat
-                    pet_list += f"({pet.capitalize()}: {num})"
+                    pet_list += f"({pet.capitalize()}: {num})\n"
 
-                formatted_stats = f"Current pet links: [{pet_list}]"
+                pastebin_url = dump_to_pastebin(pet_list, "10M")
 
-                send_chat_message(formatted_stats)
+                send_chat_message(pastebin_url)
             elif sub_command == "import":
                 if payload == "antigravity":
                     reply_string = "https://xkcd.com/353"
@@ -594,6 +595,20 @@ def send_chat_message(chat_string: str):
     chat_string = chat_string.replace("richie19942", "Bawbag")
     chat_string = f"CHAT={chat_string}"
     ws.send(chat_string)
+
+
+def dump_to_pastebin(paste_string: str, expiry: str) -> str:
+    url = "https://pastebin.com/api/api_post.php"
+    data = {
+        "api_dev_key": env_consts["PASTEBIN_API_KEY"],
+        "api_option": "paste",
+        "api_paste_code": paste_string,
+        "api_paste_expire_date": expiry
+    }
+
+    response = requests.post(url=url, data=data)
+
+    return response.text
 
 
 def log_message(message: str):
