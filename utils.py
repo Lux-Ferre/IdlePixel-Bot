@@ -1,4 +1,11 @@
 import sqlite3
+from threading import Timer
+
+
+class RepeatTimer(Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
 
 
 def get_help_string(command: str):

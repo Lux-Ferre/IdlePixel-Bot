@@ -14,16 +14,9 @@ import sqlite3
 import json
 import base64
 import textwrap
-from threading import Timer
 import traceback
 
 import utils
-
-
-class RepeatTimer(Timer):
-    def run(self):
-        while not self.finished.wait(self.interval):
-            self.function(*self.args, **self.kwargs)
 
 
 def get_env_var(env_var: str) -> str:
@@ -40,7 +33,8 @@ def set_env_consts() -> dict:
         "IP_PASSWORD": "",
         "TESTING_HOOK_URL": "",
         "LBT_DISCORD_HOOK_URL": "",
-        "DH_DISCORD_HOOK_URL": ""
+        "DH_DISCORD_HOOK_URL": "",
+        "PASTEBIN_API_KEY": "",
     }
 
     for key in env_const_list:
@@ -84,6 +78,7 @@ async def get_signature() -> str:
 
 
 def on_ws_message(ws, raw_message):
+    ignore_messages = ["SET_COUNTRY"]
     split_message = raw_message.split("=", 1)
     if len(split_message) > 1:
         [message_type, message_data] = split_message
@@ -102,12 +97,19 @@ def on_ws_message(ws, raw_message):
         on_custom(message_data)
     elif message_type == "OPEN_DIALOGUE":
         on_dialogue(message_data)
+    elif message_type == "VALID_LOGIN":
+        print("Signature verified. Login Successful.")
+    elif message_type in ignore_messages:
+        pass
     else:
         print(f"{message_type}: {message_data}")
 
 
 def on_ws_error(ws, error):
-    traceback.print_tb(error.__traceback__)
+    if isinstance(error, websocket.WebSocketConnectionClosedException):
+        print("Connection closed. Retrying...")
+    else:
+        traceback.print_tb(error.__traceback__)
 
 
 def on_ws_close(ws, close_status_code, close_msg):
@@ -366,7 +368,7 @@ def poll_online_mods():
     try:
         send_modmod_message(command="HELLO", player="ALL", payload="0:0")
     except:
-        print("Connection down.")
+        print("Online mod poll attempted while connection closed.")
 
 
 def mute_player(player: str, length: str, reason: str, is_ip: str):
@@ -676,7 +678,7 @@ if __name__ == "__main__":
     if development_mode:
         testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
-    timer = RepeatTimer(60, poll_online_mods)
+    timer = utils.RepeatTimer(60, poll_online_mods)
     timer.start()
 
     websocket.enableTrace(False)
