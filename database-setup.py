@@ -109,6 +109,8 @@ if __name__ == "__main__":
     con = sqlite3.connect("configs.db")
     cur = con.cursor()
 
+    add_config_to_database("amy_noobs", "0")
+
     # cur.execute("CREATE TABLE pet_links(title, pet, link)")
     # cur.execute("ALTER TABLE pet_links RENAME TO old_pet_links")
     # cur.execute("CREATE TABLE permissions(user UNIQUE, level)")

@@ -136,6 +136,18 @@ def on_chat(data: str):
         "message": data_split[4]
     }
 
+    amy_accounts = [
+        "amyjane1991",
+        "youallsuck",
+        "freeamyhugs",
+        "amybear",
+        "zombiebunny",
+        "idkwat2put",
+        "skyedemon",
+        "iloveamy",
+        "demonlilly",
+    ]
+
     now = datetime.now()
     current_time = now.strftime("%H:%M")
 
@@ -144,6 +156,10 @@ def on_chat(data: str):
     log_message(formatted_chat)
 
     handle_automod(message_data)
+
+    if message_data["username"] in amy_accounts:
+        if "noob" in message_data["message"]:
+            increment_amy_noobs()
 
     if len(message_data["message"]) == 0:
         pass
@@ -341,6 +357,10 @@ def handle_chat_command(player: str, message: str):
                 pastebin_url = dump_to_pastebin(output_string, "10M")
 
                 send_chat_message(pastebin_url)
+            elif sub_command == "amy_noobs":
+                counter = read_config_row("amy_noobs")
+                reply_string = f"Amy has said the word 'noob' {counter} times since 20/07/23."
+                reply_needed = True
             elif sub_command == "import":
                 if payload == "antigravity":
                     reply_string = "https://xkcd.com/353"
@@ -357,6 +377,13 @@ def handle_chat_command(player: str, message: str):
 
     if reply_needed:
         send_chat_message(reply_string)
+
+
+def increment_amy_noobs():
+    amy_noobs = int(read_config_row("amy_noobs"))
+    amy_noobs += 1
+
+    set_config_row("amy_noobs", str(amy_noobs))
 
 
 def handle_player_offline(player: str):
