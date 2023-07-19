@@ -324,17 +324,21 @@ def handle_chat_command(player: str, message: str):
 
                 reply_needed = True
             elif sub_command == "pet_stats":
-                query = "SELECT pet, count(pet) AS tot_pet_count FROM pet_links GROUP BY pet ORDER BY tot_pet_count DESC;"
+                query = "SELECT pet, GROUP_CONCAT(title) FROM pet_links GROUP BY pet"
                 params = tuple()
                 all_stats = utils.fetch_db(query, params, True)
 
-                pet_list = ""
+                output_string = ""
 
                 for stat in all_stats:
-                    pet, num = stat
-                    pet_list += f"({pet.capitalize()}: {num})\n"
+                    pet, title_string = stat
+                    titles = title_string.split(",")
+                    title_count = len(titles)
+                    output_string += f"{pet.capitalize()}({title_count}):\n"
+                    for title in titles:
+                        output_string += f"\t{title.capitalize()}\n"
 
-                pastebin_url = dump_to_pastebin(pet_list, "10M")
+                pastebin_url = dump_to_pastebin(output_string, "10M")
 
                 send_chat_message(pastebin_url)
             elif sub_command == "import":
