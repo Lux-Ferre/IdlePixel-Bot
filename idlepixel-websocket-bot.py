@@ -161,6 +161,9 @@ def on_chat(data: str):
         if "noob" in message_data["message"]:
             noob_count = message_data["message"].count("noob")
             increment_amy_noobs(noob_count)
+        if "suck" in message_data["message"]:
+            suck_count = message_data["message"].count("suck")
+            increment_amy_sucks(suck_count)
 
     if len(message_data["message"]) == 0:
         pass
@@ -388,6 +391,13 @@ def increment_amy_noobs(count: int):
     amy_noobs += count
 
     set_config_row("amy_noobs", str(amy_noobs))
+
+
+def increment_amy_sucks(count: int):
+    amy_sucks = int(read_config_row("amy_sucks"))
+    amy_sucks += count
+
+    set_config_row("amy_sucks", str(amy_sucks))
 
 
 def handle_player_offline(player: str):
