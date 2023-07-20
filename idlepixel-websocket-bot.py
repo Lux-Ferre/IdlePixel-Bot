@@ -159,7 +159,8 @@ def on_chat(data: str):
 
     if message_data["username"] in amy_accounts:
         if "noob" in message_data["message"]:
-            increment_amy_noobs()
+            noob_count = message_data["message"].count("noob")
+            increment_amy_noobs(noob_count)
 
     if len(message_data["message"]) == 0:
         pass
@@ -361,6 +362,9 @@ def handle_chat_command(player: str, message: str):
                 counter = read_config_row("amy_noobs")
                 reply_string = f"Amy has said the word 'noob' {counter} times since 20/07/23."
                 reply_needed = True
+            elif sub_command == "quote":
+                reply_string = "Your 'random' quote is: https://prnt.sc/E4RHZ-3zj3JB"
+                reply_needed = True
             elif sub_command == "import":
                 if payload == "antigravity":
                     reply_string = "https://xkcd.com/353"
@@ -379,9 +383,9 @@ def handle_chat_command(player: str, message: str):
         send_chat_message(reply_string)
 
 
-def increment_amy_noobs():
+def increment_amy_noobs(count: int):
     amy_noobs = int(read_config_row("amy_noobs"))
-    amy_noobs += 1
+    amy_noobs += count
 
     set_config_row("amy_noobs", str(amy_noobs))
 
