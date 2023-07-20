@@ -157,7 +157,7 @@ def on_chat(data: str):
 
     handle_automod(message_data)
 
-    if message_data["username"] in amy_accounts and message_data["username"][:7] == "!luxbot":
+    if message_data["username"] in amy_accounts and message_data["username"][:7] != "!luxbot":
         if "noob" in message_data["message"]:
             noob_count = message_data["message"].count("noob")
             increment_amy_noobs(noob_count)
