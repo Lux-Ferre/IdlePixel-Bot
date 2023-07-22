@@ -127,14 +127,7 @@ def on_ws_open(ws):
 
 
 def on_chat(data: str):
-    data_split = data.split("~")
-    message_data = {
-        "username": data_split[0],
-        "sigil": data_split[1],
-        "tag": data_split[2],
-        "level": data_split[3],
-        "message": data_split[4]
-    }
+    player, message = utils.Chat.splitter(data)
 
     amy_accounts = [
         "amyjane1991",
@@ -151,45 +144,44 @@ def on_chat(data: str):
     now = datetime.now()
     current_time = now.strftime("%H:%M")
 
-    formatted_chat = f'*[{current_time}]* **{message_data["username"]}:** {message_data["message"]} '
+    formatted_chat = f'*[{current_time}]* **{player["username"]}:** {message} '
 
     log_message(formatted_chat)
 
-    handle_automod(message_data)
+    handle_automod(player, message)
 
-    if message_data["username"] in amy_accounts and message_data["username"][:7] != "!luxbot":
-        if "noob" in message_data["message"]:
-            noob_count = message_data["message"].count("noob")
+    if player["username"] in amy_accounts and message[:7] != "!luxbot":
+        if "noob" in message:
+            noob_count = message.count("noob")
             increment_amy_noobs(noob_count)
-        if "suck" in message_data["message"]:
-            suck_count = message_data["message"].count("suck")
+        if "suck" in message:
+            suck_count = message.count("suck")
             increment_amy_sucks(suck_count)
 
-    if len(message_data["message"]) == 0:
+    if len(message) == 0:
         pass
-    elif message_data["message"][0] == "!":
-        handle_chat_command(player=message_data["username"], message=message_data["message"])
+    elif message[0] == "!":
+        handle_chat_command(player=player, message=message)
         if development_mode:
-            print(f'Chat command received: {message_data["message"]}')
-    elif len(message_data["message"]) > 4 and message_data["message"][:5] == "@mods":
-        note = message_data["message"][5:]
-        mod_call = f"{message_data['username']} is calling for a mod with note: {note}"
+            print(f'Chat command received: {message}')
+    elif len(message) > 4 and message[:5] == "@mods":
+        note = message[5:]
+        mod_call = f"{player['username']} is calling for a mod with note: {note}"
         send_modmod_message(payload=mod_call, player="ALL", command="MSG")
 
 
-def handle_automod(data: dict):
+def handle_automod(player: dict, message: str):
     automod_flag_words = read_config_row("automod_flag_words")
-    player = data["username"]
-    message = data["message"].lower()
+    message = message.lower()
     for trigger in automod_flag_words:
         if trigger in message:
-            message_string = f"**{data['username']} has been muted for using the word: {trigger}**"
+            message_string = f"**{player['username']} has been muted for using the word: {trigger}**"
             send_modmod_message(payload=message_string, command="MSG", player="ALL")
             length = "24"
             reason = f"Using the word: {trigger}"
             is_ip = "false"
-            mute_player(player, length, reason, is_ip)
-            send_chat_message(f"{player} has been axed from chat.")
+            mute_player(player['username'], length, reason, is_ip)
+            send_chat_message(f"{player['username']} has been axed from chat.")
             break
 
 
@@ -210,7 +202,7 @@ def on_dialogue(data: str):
         query = "SELECT user FROM permissions WHERE level=3"
         params = tuple()
 
-        account_list = utils.fetch_db(query, params, True)
+        account_list = utils.Db.fetch_db(query, params, True)
 
         level_three_accounts = [x[0] for x in account_list]
 
@@ -251,7 +243,7 @@ def on_custom(data: str):
         handle_modmod(player, command, content, callback_id)
 
 
-def handle_chat_command(player: str, message: str):
+def handle_chat_command(player: dict, message: str):
     reply_string = ""
     reply_needed = False
     split_message = message.lower().split(" ", 1)
@@ -265,21 +257,21 @@ def handle_chat_command(player: str, message: str):
         nadebot_commands = read_config_row("nadebot_commands")
         nadebot_reply = read_config_row("nadebot_reply")
         if command in nadebot_commands:
-            reply_string = f"Sorry {player}, " + nadebot_reply
+            reply_string = f"Sorry {player['username']}, " + nadebot_reply
             reply_needed = True
 
     if command[:7] == "!luxbot":
-        perm_level = permission_level(player)
+        perm_level = permission_level(player['username'])
         if perm_level >= 1:
             try:
                 sub_command = command.split(":", 1)[1]
             except KeyError:
                 sub_command = None
-                reply_string = f"Sorry {player}, that is an invalid LuxBot command format."
+                reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command format."
                 reply_needed = True
 
             if sub_command == "echo":
-                reply_string = f"Echo: {player}: {payload}"
+                reply_string = f"Echo: {player['username']}: {payload}"
                 reply_needed = True
             elif sub_command == "combat":
                 reply_string = f"https://idle-pixel.wiki/index.php/Combat_Guide"
@@ -320,7 +312,7 @@ def handle_chat_command(player: str, message: str):
                     random_bear = random.choice(list(bear_links))
                     reply_string = f"Your random Bear is: {random_bear}: {bear_links[random_bear]}"
 
-                if player == "richie19942":
+                if player['username'] == "richie19942":
                     reply_string = "Bawbag, " + reply_string
 
                 reply_needed = True
@@ -335,11 +327,11 @@ def handle_chat_command(player: str, message: str):
                 pet_link = utils.Db.fetch_db(query, params, False)
 
                 if pet_link is None:
-                    reply_string = f"Sorry {player.capitalize()}, that is an invalid pet name."
+                    reply_string = f"Sorry {player['username'].capitalize()}, that is an invalid pet name."
                 else:
                     reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
 
-                if player == "richie19942":
+                if player['username'] == "richie19942":
                     reply_string = "Bawbag, " + reply_string
 
                 reply_needed = True
@@ -374,12 +366,12 @@ def handle_chat_command(player: str, message: str):
                     reply_needed = True
             else:
                 if sub_command is not None:
-                    reply_string = f"Sorry {player}, that is an invalid LuxBot command."
+                    reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command."
                     reply_needed = True
         elif perm_level < 0:
             pass
         else:
-            reply_string = f"Sorry {player}, you are not authorized to issue LuxBot commands."
+            reply_string = f"Sorry {player['username']}, you are not authorized to issue LuxBot commands."
             reply_needed = True
 
     if reply_needed:

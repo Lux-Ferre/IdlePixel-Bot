@@ -8,6 +8,21 @@ class RepeatTimer(Timer):
             self.function(*self.args, **self.kwargs)
 
 
+class Chat:
+    @staticmethod
+    def splitter(raw_message: str):
+        raw_split = raw_message.split("~")
+        player = {
+            "username": raw_split[0],
+            "sigil": raw_split[1],
+            "tag": raw_split[2],
+            "level": raw_split[3],
+        }
+        message = raw_split[4]
+
+        return player, message
+
+
 class Interactor:
     @staticmethod
     def get_help_string(command: str):
