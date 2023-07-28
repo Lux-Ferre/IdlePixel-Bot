@@ -18,6 +18,7 @@ import textwrap
 import traceback
 
 import utils
+from chat import Chat
 
 
 def get_env_var(env_var: str) -> str:
@@ -127,7 +128,7 @@ def on_ws_open(ws):
 
 
 def on_chat(data: str):
-    player, message = utils.Chat.splitter(data)
+    player, message = Chat.splitter(data)
 
     amy_accounts = [
         "amyjane1991",
@@ -246,7 +247,7 @@ def on_custom(data: str):
 def handle_chat_command(player: dict, message: str):
     reply_string = ""
     reply_needed = False
-    command = utils.Chat.generate_command(message)
+    command = Chat.generate_command(message)
 
     if replace_nadebot:
         nadebot_commands = read_config_row("nadebot_commands")
