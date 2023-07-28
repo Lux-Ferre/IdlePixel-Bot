@@ -246,47 +246,39 @@ def on_custom(data: str):
 def handle_chat_command(player: dict, message: str):
     reply_string = ""
     reply_needed = False
-    split_message = message.lower().split(" ", 1)
-    command = split_message[0]
-    if len(split_message) > 1:
-        payload = split_message[1]
-    else:
-        payload = None
+    command = utils.Chat.generate_command(message)
 
     if replace_nadebot:
         nadebot_commands = read_config_row("nadebot_commands")
         nadebot_reply = read_config_row("nadebot_reply")
-        if command in nadebot_commands:
+        if command["command"] in nadebot_commands:
             reply_string = f"Sorry {player['username']}, " + nadebot_reply
             reply_needed = True
 
-    if command[:7] == "!luxbot":
+    if command["command"] == "!luxbot":
         perm_level = permission_level(player['username'])
         if perm_level >= 1:
-            try:
-                sub_command = command.split(":", 1)[1]
-            except KeyError:
-                sub_command = None
+            if command["sub_command"] is None:
                 reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command format."
                 reply_needed = True
 
-            if sub_command == "echo":
-                reply_string = f"Echo: {player['username']}: {payload}"
+            if command['sub_command'] == "echo":
+                reply_string = f"Echo: {player['username']}: {command['payload']}"
                 reply_needed = True
-            elif sub_command == "combat":
+            elif command['sub_command'] == "combat":
                 reply_string = f"https://idle-pixel.wiki/index.php/Combat_Guide"
                 reply_needed = True
-            elif sub_command == "dho_maps":
+            elif command['sub_command'] == "dho_maps":
                 reply_string = f"Offline map solutions: https://prnt.sc/Mdd-AKMIHfLz"
                 reply_needed = True
-            elif sub_command == "scripts":
+            elif command['sub_command'] == "scripts":
                 reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
                 reply_needed = True
-            elif sub_command == "vega":
+            elif command['sub_command'] == "vega":
                 vega_links = get_pet_links("vega")
-                if payload is not None:
+                if command["payload"] is not None:
                     try:
-                        reply_string = vega_links[payload]
+                        reply_string = vega_links[command["payload"]]
                     except KeyError:
                         reply_string = "Invalid Vega."
                 else:
@@ -294,18 +286,18 @@ def handle_chat_command(player: dict, message: str):
                     reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
 
                 reply_needed = True
-            elif sub_command == "wiki":
-                if payload is not None:
-                    reply_string = f"Wiki page for {payload}: https://idle-pixel.wiki/index.php/{payload.capitalize()}"
+            elif command['sub_command'] == "wiki":
+                if command['payload'] is not None:
+                    reply_string = f"Wiki page for {command['payload']}: https://idle-pixel.wiki/index.php/{command['payload'].capitalize()}"
                 else:
                     reply_string = f"Wiki home page: https://idle-pixel.wiki/index.php/Main_Page"
 
                 reply_needed = True
-            elif sub_command == "bear":
+            elif command['sub_command'] == "bear":
                 bear_links = get_pet_links("bear")
-                if payload is not None:
+                if command['payload'] is not None:
                     try:
-                        reply_string = bear_links[payload]
+                        reply_string = bear_links[command['payload']]
                     except KeyError:
                         reply_string = "Invalid Bear."
                 else:
@@ -316,10 +308,10 @@ def handle_chat_command(player: dict, message: str):
                     reply_string = "Bawbag, " + reply_string
 
                 reply_needed = True
-            elif sub_command == "pet":
-                if payload is not None:
+            elif command['sub_command'] == "pet":
+                if command['payload'] is not None:
                     query = "SELECT title, pet, link FROM pet_links WHERE pet=? ORDER BY RANDOM() LIMIT 1;"
-                    params = (payload,)
+                    params = (command['payload'],)
                 else:
                     query = "SELECT title, pet, link FROM pet_links ORDER BY RANDOM() LIMIT 1;"
                     params = tuple()
@@ -335,7 +327,7 @@ def handle_chat_command(player: dict, message: str):
                     reply_string = "Bawbag, " + reply_string
 
                 reply_needed = True
-            elif sub_command == "pet_stats":
+            elif command['sub_command'] == "pet_stats":
                 query = "SELECT pet, GROUP_CONCAT(title) FROM pet_links GROUP BY pet"
                 params = tuple()
                 all_stats = utils.Db.fetch_db(query, params, True)
@@ -353,19 +345,19 @@ def handle_chat_command(player: dict, message: str):
                 pastebin_url = dump_to_pastebin(output_string, "10M")
 
                 send_chat_message(pastebin_url)
-            elif sub_command == "amy_noobs":
+            elif command['sub_command'] == "amy_noobs":
                 counter = read_config_row("amy_noobs")
                 reply_string = f"Amy has said the word 'noob' {counter} times since 20/07/23."
                 reply_needed = True
-            elif sub_command == "quote":
+            elif command['sub_command'] == "quote":
                 reply_string = "Your 'random' quote is: https://prnt.sc/E4RHZ-3zj3JB"
                 reply_needed = True
-            elif sub_command == "import":
-                if payload == "antigravity":
+            elif command['sub_command'] == "import":
+                if command['payload'] == "antigravity":
                     reply_string = "https://xkcd.com/353"
                     reply_needed = True
             else:
-                if sub_command is not None:
+                if command['sub_command'] is not None:
                     reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command."
                     reply_needed = True
         elif perm_level < 0:
