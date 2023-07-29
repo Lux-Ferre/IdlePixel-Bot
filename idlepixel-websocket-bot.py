@@ -1,7 +1,6 @@
 import asyncio
 import os
 import discord
-import requests
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import websocket
@@ -17,7 +16,7 @@ import base64
 import textwrap
 import traceback
 
-import utils
+from utils import RepeatTimer, Interactor, Db
 from chat import Chat
 
 
@@ -172,7 +171,7 @@ def on_chat(data: str):
 
 
 def handle_automod(player: dict, message: str):
-    automod_flag_words = read_config_row("automod_flag_words")
+    automod_flag_words = Db.read_config_row("automod_flag_words")
     message = message.lower()
     for trigger in automod_flag_words:
         if trigger in message:
@@ -203,7 +202,7 @@ def on_dialogue(data: str):
         query = "SELECT user FROM permissions WHERE level=3"
         params = tuple()
 
-        account_list = utils.Db.fetch_db(query, params, True)
+        account_list = Db.fetch_db(query, params, True)
 
         level_three_accounts = [x[0] for x in account_list]
 
@@ -250,8 +249,8 @@ def handle_chat_command(player: dict, message: str):
     command = Chat.generate_command(message)
 
     if replace_nadebot:
-        nadebot_commands = read_config_row("nadebot_commands")
-        nadebot_reply = read_config_row("nadebot_reply")
+        nadebot_commands = Db.read_config_row("nadebot_commands")
+        nadebot_reply = Db.read_config_row("nadebot_reply")
         if command["command"] in nadebot_commands:
             reply_string = f"Sorry {player['username']}, " + nadebot_reply
             reply_needed = True
@@ -262,105 +261,8 @@ def handle_chat_command(player: dict, message: str):
             if command["sub_command"] is None:
                 reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command format."
                 reply_needed = True
-
-            if command['sub_command'] == "echo":
-                reply_string = f"Echo: {player['username']}: {command['payload']}"
-                reply_needed = True
-            elif command['sub_command'] == "combat":
-                reply_string = f"https://idle-pixel.wiki/index.php/Combat_Guide"
-                reply_needed = True
-            elif command['sub_command'] == "dho_maps":
-                reply_string = f"Offline map solutions: https://prnt.sc/Mdd-AKMIHfLz"
-                reply_needed = True
-            elif command['sub_command'] == "scripts":
-                reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
-                reply_needed = True
-            elif command['sub_command'] == "vega":
-                vega_links = get_pet_links("vega")
-                if command["payload"] is not None:
-                    try:
-                        reply_string = vega_links[command["payload"]]
-                    except KeyError:
-                        reply_string = "Invalid Vega."
-                else:
-                    random_vega = random.choice(list(vega_links))
-                    reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
-
-                reply_needed = True
-            elif command['sub_command'] == "wiki":
-                if command['payload'] is not None:
-                    reply_string = f"Wiki page for {command['payload']}: https://idle-pixel.wiki/index.php/{command['payload'].capitalize()}"
-                else:
-                    reply_string = f"Wiki home page: https://idle-pixel.wiki/index.php/Main_Page"
-
-                reply_needed = True
-            elif command['sub_command'] == "bear":
-                bear_links = get_pet_links("bear")
-                if command['payload'] is not None:
-                    try:
-                        reply_string = bear_links[command['payload']]
-                    except KeyError:
-                        reply_string = "Invalid Bear."
-                else:
-                    random_bear = random.choice(list(bear_links))
-                    reply_string = f"Your random Bear is: {random_bear}: {bear_links[random_bear]}"
-
-                if player['username'] == "richie19942":
-                    reply_string = "Bawbag, " + reply_string
-
-                reply_needed = True
-            elif command['sub_command'] == "pet":
-                if command['payload'] is not None:
-                    query = "SELECT title, pet, link FROM pet_links WHERE pet=? ORDER BY RANDOM() LIMIT 1;"
-                    params = (command['payload'],)
-                else:
-                    query = "SELECT title, pet, link FROM pet_links ORDER BY RANDOM() LIMIT 1;"
-                    params = tuple()
-
-                pet_link = utils.Db.fetch_db(query, params, False)
-
-                if pet_link is None:
-                    reply_string = f"Sorry {player['username'].capitalize()}, that is an invalid pet name."
-                else:
-                    reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
-
-                if player['username'] == "richie19942":
-                    reply_string = "Bawbag, " + reply_string
-
-                reply_needed = True
-            elif command['sub_command'] == "pet_stats":
-                query = "SELECT pet, GROUP_CONCAT(title) FROM pet_links GROUP BY pet"
-                params = tuple()
-                all_stats = utils.Db.fetch_db(query, params, True)
-
-                output_string = ""
-
-                for stat in all_stats:
-                    pet, title_string = stat
-                    titles = title_string.split(",")
-                    title_count = len(titles)
-                    output_string += f"{pet.capitalize()}({title_count}):\n"
-                    for title in titles:
-                        output_string += f"\t{title.capitalize()}\n"
-
-                pastebin_url = dump_to_pastebin(output_string, "10M")
-
-                Chat.send_chat_message(ws, pastebin_url)
-            elif command['sub_command'] == "amy_noobs":
-                counter = read_config_row("amy_noobs")
-                reply_string = f"Amy has said the word 'noob' {counter} times since 20/07/23."
-                reply_needed = True
-            elif command['sub_command'] == "quote":
-                reply_string = "Your 'random' quote is: https://prnt.sc/E4RHZ-3zj3JB"
-                reply_needed = True
-            elif command['sub_command'] == "import":
-                if command['payload'] == "antigravity":
-                    reply_string = "https://xkcd.com/353"
-                    reply_needed = True
             else:
-                if command['sub_command'] is not None:
-                    reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command."
-                    reply_needed = True
+                Chat.dispatch(ws, player, command)
         elif perm_level < 0:
             pass
         else:
@@ -372,14 +274,14 @@ def handle_chat_command(player: dict, message: str):
 
 
 def increment_amy_noobs(count: int):
-    amy_noobs = int(read_config_row("amy_noobs"))
+    amy_noobs = int(Db.read_config_row("amy_noobs"))
     amy_noobs += count
 
     set_config_row("amy_noobs", str(amy_noobs))
 
 
 def increment_amy_sucks(count: int):
-    amy_sucks = int(read_config_row("amy_sucks"))
+    amy_sucks = int(Db.read_config_row("amy_sucks"))
     amy_sucks += count
 
     set_config_row("amy_sucks", str(amy_sucks))
@@ -420,7 +322,7 @@ def update_permission(player: str, updated_player: str, level: str):
                 ON CONFLICT(user) DO UPDATE SET level=?2
             """
     params = (updated_player, level)
-    utils.Db.set_db(query, params)
+    Db.set_db(query, params)
 
     send_custom_message(player, f"{updated_player} permission level set to {level}.")
 
@@ -429,7 +331,7 @@ def permission_level(player: str):
     query = "SELECT level FROM permissions WHERE user=?"
     params = (player, )
 
-    level = utils.Db.fetch_db(query, params, False)
+    level = Db.fetch_db(query, params, False)
     if level is None:
         return 0
     else:
@@ -457,7 +359,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             message = content.split(":")[1]
             send_custom_message(recipient, message)
         elif command == "triggers":
-            trigger_list = read_config_row("automod_flag_words")
+            trigger_list = Db.read_config_row("automod_flag_words")
             split_sub_command = content.split(";")
             subcommand = split_sub_command[0]
             payload = split_sub_command[1]
@@ -479,7 +381,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             send_custom_message(player, f"Nadebot replies are now {status}.")
         elif command == "nadesreply":
             set_config_row("nadebot_reply", content)
-            nadebot_reply = read_config_row("nadebot_reply")
+            nadebot_reply = Db.read_config_row("nadebot_reply")
             send_custom_message(player, f"New NadeBot reply set. New reply is:")
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
         elif command == "speak":
@@ -487,7 +389,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
         elif command == "pet_titles":
             query = "SELECT title FROM pet_links"
             params = tuple()
-            raw_title_list = utils.Db.fetch_db(query, params, True)
+            raw_title_list = Db.fetch_db(query, params, True)
             title_list = []
             for title_tuple in raw_title_list:
                 title_list.append(title_tuple[0].capitalize())
@@ -521,19 +423,19 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 send_custom_message(player, help_string)
                 send_custom_message(player, "help:command will give a brief description of the command.")
             else:
-                help_string = utils.Interactor.get_help_string(content)
+                help_string = Interactor.get_help_string(content)
                 send_custom_message(player, help_string)
 
             if content == "nadesreply":
-                nadebot_reply = read_config_row("nadebot_reply")
+                nadebot_reply = Db.read_config_row("nadebot_reply")
                 send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
             elif content == "triggers":
-                trigger_list = read_config_row("automod_flag_words")
+                trigger_list = Db.read_config_row("automod_flag_words")
                 send_custom_message(player, f"Current triggers: {trigger_list}")
             elif content == "permissions":
                 query = f"SELECT * FROM permissions"
                 params = tuple()
-                perms_list = utils.Db.fetch_db(query, params, True)
+                perms_list = Db.fetch_db(query, params, True)
                 perms_string = f"Current permissions: {perms_list}"
                 wrapped_message = textwrap.wrap(perms_string, 240)
                 for message in wrapped_message:
@@ -621,20 +523,6 @@ def send_custom_message(player: str, content: str):
     ws.send(f"{custom_string}")
 
 
-def dump_to_pastebin(paste_string: str, expiry: str) -> str:
-    url = "https://pastebin.com/api/api_post.php"
-    data = {
-        "api_dev_key": env_consts["PASTEBIN_API_KEY"],
-        "api_option": "paste",
-        "api_paste_code": paste_string,
-        "api_paste_expire_date": expiry
-    }
-
-    response = requests.post(url=url, data=data)
-
-    return response.text
-
-
 def log_message(message: str):
     if development_mode:
         testing_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
@@ -653,19 +541,7 @@ def add_config_to_database(key: str, value: str | list):
     query = "INSERT INTO configs VALUES (?, ?)"
     params = (key, encoded_string)
 
-    utils.Db.set_db(query, params)
-
-
-def read_config_row(key: str) -> list | str | dict:
-    query = "SELECT data FROM configs WHERE config=?"
-    params = (key, )
-
-    encoded_config = utils.Db.fetch_db(query, params, False)[0]
-    decoded_config = json.loads(base64.b64decode(encoded_config))
-
-    if development_mode:
-        print(decoded_config)
-    return decoded_config
+    Db.set_db(query, params)
 
 
 def set_config_row(key: str, value: str | list):
@@ -676,30 +552,14 @@ def set_config_row(key: str, value: str | list):
 
     params = (encoded_string, key)
 
-    utils.Db.set_db(query, params)
-
-
-def get_pet_links(pet: str):
-    query = "SELECT title, link from pet_links WHERE pet=?"
-    params = (pet,)
-
-    all_links = utils.Db.fetch_db(query, params, True)
-    loaded_links = {}
-
-    for pet in all_links:
-        title = pet[0]
-        link = pet[1]
-
-        loaded_links[title] = link
-
-    return loaded_links
+    Db.set_db(query, params)
 
 
 def add_pet(pet_data: tuple, player: str):
     query = "INSERT INTO pet_links VALUES (?, ?, ?)"
 
     try:
-        utils.Db.set_db(query, pet_data)
+        Db.set_db(query, pet_data)
     except sqlite3.IntegrityError as e:
         print(e)
         send_custom_message(player, f"Link not added, '{pet_data[0]}' already exists.")
@@ -717,7 +577,7 @@ if __name__ == "__main__":
     if development_mode:
         testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
 
-    timer = utils.RepeatTimer(60, poll_online_mods)
+    timer = RepeatTimer(60, poll_online_mods)
     timer.start()
 
     websocket.enableTrace(False)
