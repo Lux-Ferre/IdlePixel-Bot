@@ -34,3 +34,9 @@ class Chat:
         }
 
         return command
+
+    @staticmethod
+    def send_chat_message(ws, chat_string: str):
+        chat_string = chat_string.replace("richie19942", "Bawbag")
+        chat_string = f"CHAT={chat_string}"
+        ws.send(chat_string)

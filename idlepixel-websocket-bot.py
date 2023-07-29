@@ -182,7 +182,7 @@ def handle_automod(player: dict, message: str):
             reason = f"Using the word: {trigger}"
             is_ip = "false"
             mute_player(player['username'], length, reason, is_ip)
-            send_chat_message(f"{player['username']} has been axed from chat.")
+            Chat.send_chat_message(ws, f"{player['username']} has been axed from chat.")
             break
 
 
@@ -345,7 +345,7 @@ def handle_chat_command(player: dict, message: str):
 
                 pastebin_url = dump_to_pastebin(output_string, "10M")
 
-                send_chat_message(pastebin_url)
+                Chat.send_chat_message(ws, pastebin_url)
             elif command['sub_command'] == "amy_noobs":
                 counter = read_config_row("amy_noobs")
                 reply_string = f"Amy has said the word 'noob' {counter} times since 20/07/23."
@@ -368,7 +368,7 @@ def handle_chat_command(player: dict, message: str):
             reply_needed = True
 
     if reply_needed:
-        send_chat_message(reply_string)
+        Chat.send_chat_message(ws, reply_string)
 
 
 def increment_amy_noobs(count: int):
@@ -451,7 +451,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             send_custom_message(player, content)
         elif command == "chatecho":
             chat_string = f"{player} echo: {content}"
-            send_chat_message(chat_string)
+            Chat.send_chat_message(ws, chat_string)
         elif command == "relay":
             recipient = content.split(":")[0]
             message = content.split(":")[1]
@@ -483,7 +483,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             send_custom_message(player, f"New NadeBot reply set. New reply is:")
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
         elif command == "speak":
-            send_chat_message(content)
+            Chat.send_chat_message(ws, content)
         elif command == "pet_titles":
             query = "SELECT title FROM pet_links"
             params = tuple()
@@ -574,7 +574,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             if content is None:
                 send_custom_message(player, "Invalid syntax. Specify a target.")
             else:
-                send_chat_message(f"/whois {content}")
+                Chat.send_chat_message(ws, f"/whois {content}")
         elif command == "generic":
             send_generic(content)
             send_custom_message(player, f"Generic websocket command sent: {content}")
@@ -619,12 +619,6 @@ def send_modmod_message(**kwargs):
 def send_custom_message(player: str, content: str):
     custom_string = f"CUSTOM={player}~{content}"
     ws.send(f"{custom_string}")
-
-
-def send_chat_message(chat_string: str):
-    chat_string = chat_string.replace("richie19942", "Bawbag")
-    chat_string = f"CHAT={chat_string}"
-    ws.send(chat_string)
 
 
 def dump_to_pastebin(paste_string: str, expiry: str) -> str:
