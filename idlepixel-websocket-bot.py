@@ -4,7 +4,6 @@ import discord
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import websocket
-import random
 import sys
 from datetime import datetime
 from discord import SyncWebhook
@@ -249,7 +248,7 @@ def handle_chat_command(player: dict, message: str):
     command = Chat.generate_command(message)
 
     if replace_nadebot:
-        nadebot_commands = Db.read_config_row("nadebot_commands")
+        nadebot_commands = ['!bigbone', '!combat', '!dhm', '!dho', '!distance', '!scripts', '!wiki', '!xp', '!help']
         nadebot_reply = Db.read_config_row("nadebot_reply")
         if command["command"] in nadebot_commands:
             reply_string = f"Sorry {player['username']}, " + nadebot_reply
