@@ -9,14 +9,13 @@ from datetime import datetime
 from discord import SyncWebhook
 import rel
 import ssl
-import sqlite3
 import json
 import base64
-import textwrap
 import traceback
 
-from utils import RepeatTimer, Interactor, Db
+from utils import RepeatTimer, Db, Utils
 from chat import Chat
+from interactor import Interactor
 
 
 def get_env_var(env_var: str) -> str:
@@ -179,7 +178,7 @@ def handle_automod(player: dict, message: str):
             length = "24"
             reason = f"Using the word: {trigger}"
             is_ip = "false"
-            mute_player(player['username'], length, reason, is_ip)
+            Utils.mute_player(ws, player['username'], length, reason, is_ip)
             Chat.send_chat_message(ws, f"{player['username']} has been axed from chat.")
             break
 
@@ -206,7 +205,7 @@ def on_dialogue(data: str):
         level_three_accounts = [x[0] for x in account_list]
 
         for account in level_three_accounts:
-            send_custom_message(account, "WHOIS:" + str(whois_list))
+            Utils.send_custom_message(ws, account, "WHOIS:" + str(whois_list))
     else:
         print(data)
 
@@ -247,21 +246,14 @@ def handle_chat_command(player: dict, message: str):
     reply_needed = False
     command = Chat.generate_command(message)
 
-    if replace_nadebot:
-        nadebot_commands = ['!bigbone', '!combat', '!dhm', '!dho', '!distance', '!scripts', '!wiki', '!xp', '!help']
-        nadebot_reply = Db.read_config_row("nadebot_reply")
-        if command["command"] in nadebot_commands:
-            reply_string = f"Sorry {player['username']}, " + nadebot_reply
-            reply_needed = True
-
     if command["command"] == "!luxbot":
-        perm_level = permission_level(player['username'])
+        perm_level = Utils.permission_level(player['username'])
         if perm_level >= 1:
             if command["sub_command"] is None:
                 reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command format."
                 reply_needed = True
             else:
-                Chat.dispatch(ws, player, command)
+                Chat.dispatcher(ws, player, command)
         elif perm_level < 0:
             pass
         else:
@@ -303,182 +295,17 @@ def poll_online_mods():
         print("Online mod poll attempted while connection closed.")
 
 
-def mute_player(player: str, length: str, reason: str, is_ip: str):
-    # websocket.send("MUTE=" + username_target + "~" + hours + "~" + reason + "~" + is_ip);
-    mute_string = f"MUTE={player}~{length}~{reason}~{is_ip}"
-    ws.send(f"{mute_string}")
-
-
-def update_permission(player: str, updated_player: str, level: str):
-    level = int(level)
-
-    if not -1 <= level <= 3:
-        send_custom_message(player, "Invalid permission level. Must be between -1 and 3.")
-        return
-
-    query = """
-                INSERT INTO permissions(user, level) VALUES(?1, ?2)
-                ON CONFLICT(user) DO UPDATE SET level=?2
-            """
-    params = (updated_player, level)
-    Db.set_db(query, params)
-
-    send_custom_message(player, f"{updated_player} permission level set to {level}.")
-
-
-def permission_level(player: str):
-    query = "SELECT level FROM permissions WHERE user=?"
-    params = (player, )
-
-    level = Db.fetch_db(query, params, False)
-    if level is None:
-        return 0
-    else:
-        return level[0]
-
-
-def send_generic(command: str):
-    ws.send(command)
-
-
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
-    interactor_commands = ["echo", "chatecho", "relay", "togglenadebotreply", "nadesreply", "speak", "mute",
-                           "permissions", "triggers", "pets", "help", "whois", "generic", "pet_titles", ]
-    perm_level = permission_level(player)
-    if perm_level < 2:
-        send_custom_message(player, "Permission level 2 or greater required to interact with LuxBot.")
-    elif perm_level >= 2:
-        if command == "echo":
-            send_custom_message(player, content)
-        elif command == "chatecho":
-            chat_string = f"{player} echo: {content}"
-            Chat.send_chat_message(ws, chat_string)
-        elif command == "relay":
-            recipient = content.split(":")[0]
-            message = content.split(":")[1]
-            send_custom_message(recipient, message)
-        elif command == "triggers":
-            trigger_list = Db.read_config_row("automod_flag_words")
-            split_sub_command = content.split(";")
-            subcommand = split_sub_command[0]
-            payload = split_sub_command[1]
-            if subcommand == "add":
-                trigger_list.append(payload.strip())
-                Db.set_config_row("automod_flag_words", trigger_list)
-                send_custom_message(player, f"{payload} has been added to automod triggers.")
-            elif subcommand == "remove":
-                trigger_list.remove(payload.strip())
-                Db.set_config_row("automod_flag_words", trigger_list)
-                send_custom_message(player, f"{payload} has been removed from the automod triggers.")
-        elif command == "togglenadebotreply":
-            global replace_nadebot
-            replace_nadebot = not replace_nadebot
-            if replace_nadebot:
-                status = "on"
-            else:
-                status = "off"
-            send_custom_message(player, f"Nadebot replies are now {status}.")
-        elif command == "nadesreply":
-            Db.set_config_row("nadebot_reply", content)
-            nadebot_reply = Db.read_config_row("nadebot_reply")
-            send_custom_message(player, f"New NadeBot reply set. New reply is:")
-            send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
-        elif command == "speak":
-            Chat.send_chat_message(ws, content)
-        elif command == "pet_titles":
-            query = "SELECT title FROM pet_links"
-            params = tuple()
-            raw_title_list = Db.fetch_db(query, params, True)
-            title_list = []
-            for title_tuple in raw_title_list:
-                title_list.append(title_tuple[0].capitalize())
-            stringified_list = ", ".join(title_list)
-            title_string = f"{stringified_list}"
-            wrapped_message = textwrap.wrap(title_string, 240)
-            for message in wrapped_message:
-                send_custom_message(player, message)
-        elif command == "pets":
-            split_sub_command = content.split(";")
-            if len(split_sub_command) != 4:
-                send_custom_message(player, f"Invalid syntax. (pets:add;pet;title;link)")
-            else:
-                subcommand = split_sub_command[0]
-                pet = split_sub_command[1]
-                title = split_sub_command[2]
-                link = split_sub_command[3]
+    command_data = {
+        "player": player,
+        "command": command,
+        "content": content,
+        "callback_id": callback_id
+    }
 
-                pet_data = (title, pet, link)
+    response = Interactor.dispatcher(ws, False, command_data)
 
-                if subcommand == "add":
-                    add_pet(pet_data, player)
-                    send_custom_message(player, f"{pet} link added with title: {title}")
-                elif subcommand == "remove":
-                    send_custom_message(player, f"Remove feature not added.")
-        elif command == "help":
-            if content is None:
-                help_string = "Command List"
-                for com in interactor_commands:
-                    help_string += f" | {com}"
-                send_custom_message(player, help_string)
-                send_custom_message(player, "help:command will give a brief description of the command.")
-            else:
-                help_string = Interactor.get_help_string(content)
-                send_custom_message(player, help_string)
-
-            if content == "nadesreply":
-                nadebot_reply = Db.read_config_row("nadebot_reply")
-                send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
-            elif content == "triggers":
-                trigger_list = Db.read_config_row("automod_flag_words")
-                send_custom_message(player, f"Current triggers: {trigger_list}")
-            elif content == "permissions":
-                query = f"SELECT * FROM permissions"
-                params = tuple()
-                perms_list = Db.fetch_db(query, params, True)
-                perms_string = f"Current permissions: {perms_list}"
-                wrapped_message = textwrap.wrap(perms_string, 240)
-                for message in wrapped_message:
-                    send_custom_message(player, message)
-
-        elif command in ["permissions", "mute", "whois", "generic"]:
-            if perm_level < 3:
-                send_custom_message(player, "Permission level 3 required.")
-        else:
-            send_custom_message(player, f"{command} is not a valid interactor command.")
-    if perm_level >= 3:
-        if command == "permissions":
-            split_command = content.split(";")
-            if len(split_command) == 2:
-                updated_player = split_command[0]
-                level = split_command[1]
-                update_permission(player, updated_player, level)
-            else:
-                send_custom_message(player, "Invalid syntax. Must be of form 'permissions:player;level'")
-        elif command == "mute":
-            if content is None:
-                split_data = None
-                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
-            else:
-                split_data = content.split(";")
-
-            if len(split_data) == 4 and split_data is not None:
-                target = split_data[0]
-                reason = split_data[1]
-                length = split_data[2]
-                is_ip = split_data[3]
-
-                mute_player(target, length, reason, is_ip)
-                send_custom_message(player, f"{target} has been successfully muted for {length} hours.")
-            else:
-                send_custom_message(player, "Invalid mute format. Must be mute:player;reason;length;is_ip")
-        elif command == "whois":
-            if content is None:
-                send_custom_message(player, "Invalid syntax. Specify a target.")
-            else:
-                Chat.send_chat_message(ws, f"/whois {content}")
-        elif command == "generic":
-            send_generic(content)
-            send_custom_message(player, f"Generic websocket command sent: {content}")
+    Utils.send_custom_message(ws, player, response)
 
 
 def handle_modmod(player: str, command: str, content: str, callback_id: str):
@@ -512,14 +339,9 @@ def send_modmod_message(**kwargs):
     message = f"MODMOD:{command}:{payload}"
     if player == "ALL":
         for account in online_mods.copy():
-            send_custom_message(account, message)
+            Utils.send_custom_message(ws, account, message)
     else:
-        send_custom_message(player, message)
-
-
-def send_custom_message(player: str, content: str):
-    custom_string = f"CUSTOM={player}~{content}"
-    ws.send(f"{custom_string}")
+        Utils.send_custom_message(ws, player, message)
 
 
 def log_message(message: str):
@@ -543,22 +365,10 @@ def add_config_to_database(key: str, value: str | list):
     Db.set_db(query, params)
 
 
-def add_pet(pet_data: tuple, player: str):
-    query = "INSERT INTO pet_links VALUES (?, ?, ?)"
-
-    try:
-        Db.set_db(query, pet_data)
-    except sqlite3.IntegrityError as e:
-        print(e)
-        send_custom_message(player, f"Link not added, '{pet_data[0]}' already exists.")
-
-
 if __name__ == "__main__":
     env_consts = set_env_consts()
     development_mode = is_development_mode()
     online_mods = set()
-
-    replace_nadebot = False
 
     lbt_webhook = SyncWebhook.from_url(env_consts["LBT_DISCORD_HOOK_URL"])
     dh_webhook = SyncWebhook.from_url(env_consts["DH_DISCORD_HOOK_URL"])

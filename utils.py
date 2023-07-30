@@ -12,39 +12,6 @@ class RepeatTimer(Timer):
             self.function(*self.args, **self.kwargs)
 
 
-class Interactor:
-    @staticmethod
-    def get_help_string(command: str) -> str:
-        if command == "echo":
-            help_string = "Echos message as custom. (echo:message)"
-        elif command == "chatecho":
-            help_string = "Echos message into chat. (chatecho:message)"
-        elif command == "relay":
-            help_string = "Passes on message to another account. (relay:account:message)"
-        elif command == "togglenadebotreply":
-            help_string = "Toggles bot responses to Nadess bot commands."
-        elif command == "nadesreply":
-            help_string = "Sets a new reply string for Nadess bot commands. (nadesreply:reply_string)"
-        elif command == "triggers":
-            help_string = f"Add/remove automod triggers. (triggers:add/remove;trigger)"
-        elif command == "speak":
-            help_string = "Relays text to chat as the bot. (speak:content)"
-        elif command == "mute":
-            help_string = "Mutes target player. (mute:player;reason;length;is_ip)"
-        elif command == "pets":
-            help_string = "Interacts with the pets database. (pets:add/remove;pet;title;link)"
-        elif command == "permissions":
-            help_string = "Modifies player permissions. (permissions:player:level)"
-        elif command == "help":
-            help_string = "Lists commands or gives a description of a command. (help:command)"
-        elif command == "generic":
-            help_string = "Relays content as a websocket frame."
-        else:
-            help_string = "Invalid help command. Should be of format (help:command)"
-
-        return help_string
-
-
 class Db:
     @staticmethod
     def fetch_db(query: str, params: tuple, many: bool):
@@ -109,17 +76,72 @@ class Db:
 
         Db.set_db(query, params)
 
+    @staticmethod
+    def add_pet(ws, pet_data: tuple, player: str):
+        query = "INSERT INTO pet_links VALUES (?, ?, ?)"
 
-def dump_to_pastebin(paste_string: str, expiry: str) -> str:
-    api_key = os.environ["PASTEBIN_API_KEY"]
-    url = "https://pastebin.com/api/api_post.php"
-    data = {
-        "api_dev_key": api_key,
-        "api_option": "paste",
-        "api_paste_code": paste_string,
-        "api_paste_expire_date": expiry
-    }
+        try:
+            Db.set_db(query, pet_data)
+        except sqlite3.IntegrityError as e:
+            print(e)
+            Utils.send_custom_message(ws, player, f"Link not added, '{pet_data[0]}' already exists.")
 
-    response = requests.post(url=url, data=data)
+    @staticmethod
+    def update_permission(ws, player: str, updated_player: str, level: str):
+        level = int(level)
 
-    return response.text
+        if not -1 <= level <= 3:
+            Utils.send_custom_message(ws, player, "Invalid permission level. Must be between -1 and 3.")
+            return
+
+        query = """
+                    INSERT INTO permissions(user, level) VALUES(?1, ?2)
+                    ON CONFLICT(user) DO UPDATE SET level=?2
+                """
+        params = (updated_player, level)
+        Db.set_db(query, params)
+
+        Utils.send_custom_message(ws, player, f"{updated_player} permission level set to {level}.")
+
+
+class Utils:
+    @staticmethod
+    def dump_to_pastebin(paste_string: str, expiry: str) -> str:
+        api_key = os.environ["PASTEBIN_API_KEY"]
+        url = "https://pastebin.com/api/api_post.php"
+        data = {
+            "api_dev_key": api_key,
+            "api_option": "paste",
+            "api_paste_code": paste_string,
+            "api_paste_expire_date": expiry
+        }
+
+        response = requests.post(url=url, data=data)
+
+        return response.text
+
+    @staticmethod
+    def send_custom_message(ws, player: str, content: str):
+        custom_string = f"CUSTOM={player}~{content}"
+        ws.send(f"{custom_string}")
+
+    @staticmethod
+    def mute_player(ws, player: str, length: str, reason: str, is_ip: str):
+        # websocket.send("MUTE=" + username_target + "~" + hours + "~" + reason + "~" + is_ip);
+        mute_string = f"MUTE={player}~{length}~{reason}~{is_ip}"
+        ws.send(f"{mute_string}")
+
+    @staticmethod
+    def send_generic(ws, command: str):
+        ws.send(command)
+
+    @staticmethod
+    def permission_level(player: str):
+        query = "SELECT level FROM permissions WHERE user=?"
+        params = (player,)
+
+        level = Db.fetch_db(query, params, False)
+        if level is None:
+            return 0
+        else:
+            return level[0]

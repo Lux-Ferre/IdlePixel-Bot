@@ -1,6 +1,6 @@
 import random
 
-from utils import Db, dump_to_pastebin
+from utils import Db, Utils
 
 
 class Chat:
@@ -47,8 +47,8 @@ class Chat:
         ws.send(chat_string)
 
     @staticmethod
-    def dispatch(ws, player: dict, command: dict):
-        dispatcher = {
+    def dispatcher(ws, player: dict, command: dict):
+        dispatch = {
             "echo": Chat.echo,
             "combat": Chat.combat,
             "dho_maps": Chat.dho_maps,
@@ -63,7 +63,7 @@ class Chat:
             "import": Chat.import_command,
         }
 
-        dispatcher[command["sub_command"]](ws, player, command)
+        dispatch[command["sub_command"]](ws, player, command)
 
     @staticmethod
     def echo(ws, player: dict, command: dict):
@@ -162,7 +162,7 @@ class Chat:
             for title in titles:
                 output_string += f"\t{title.capitalize()}\n"
 
-        pastebin_url = dump_to_pastebin(output_string, "10M")
+        pastebin_url = Utils.dump_to_pastebin(output_string, "10M")
 
         Chat.send_chat_message(ws, pastebin_url)
 
