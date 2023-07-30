@@ -98,6 +98,17 @@ class Db:
 
         return decoded_config
 
+    @staticmethod
+    def set_config_row(key: str, value: str | list):
+        query = "UPDATE configs SET data=? WHERE config=?"
+
+        stringified_value = json.dumps(value)
+        encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
+
+        params = (encoded_string, key)
+
+        Db.set_db(query, params)
+
 
 def dump_to_pastebin(paste_string: str, expiry: str) -> str:
     api_key = os.environ["PASTEBIN_API_KEY"]

@@ -276,14 +276,14 @@ def increment_amy_noobs(count: int):
     amy_noobs = int(Db.read_config_row("amy_noobs"))
     amy_noobs += count
 
-    set_config_row("amy_noobs", str(amy_noobs))
+    Db.set_config_row("amy_noobs", str(amy_noobs))
 
 
 def increment_amy_sucks(count: int):
     amy_sucks = int(Db.read_config_row("amy_sucks"))
     amy_sucks += count
 
-    set_config_row("amy_sucks", str(amy_sucks))
+    Db.set_config_row("amy_sucks", str(amy_sucks))
 
 
 def handle_player_offline(player: str):
@@ -364,11 +364,11 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
             payload = split_sub_command[1]
             if subcommand == "add":
                 trigger_list.append(payload.strip())
-                set_config_row("automod_flag_words", trigger_list)
+                Db.set_config_row("automod_flag_words", trigger_list)
                 send_custom_message(player, f"{payload} has been added to automod triggers.")
             elif subcommand == "remove":
                 trigger_list.remove(payload.strip())
-                set_config_row("automod_flag_words", trigger_list)
+                Db.set_config_row("automod_flag_words", trigger_list)
                 send_custom_message(player, f"{payload} has been removed from the automod triggers.")
         elif command == "togglenadebotreply":
             global replace_nadebot
@@ -379,7 +379,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
                 status = "off"
             send_custom_message(player, f"Nadebot replies are now {status}.")
         elif command == "nadesreply":
-            set_config_row("nadebot_reply", content)
+            Db.set_config_row("nadebot_reply", content)
             nadebot_reply = Db.read_config_row("nadebot_reply")
             send_custom_message(player, f"New NadeBot reply set. New reply is:")
             send_custom_message(player, f"Sorry <player>, {nadebot_reply}.")
@@ -539,17 +539,6 @@ def add_config_to_database(key: str, value: str | list):
 
     query = "INSERT INTO configs VALUES (?, ?)"
     params = (key, encoded_string)
-
-    Db.set_db(query, params)
-
-
-def set_config_row(key: str, value: str | list):
-    query = "UPDATE configs SET data=? WHERE config=?"
-
-    stringified_value = json.dumps(value)
-    encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
-
-    params = (encoded_string, key)
 
     Db.set_db(query, params)
 
