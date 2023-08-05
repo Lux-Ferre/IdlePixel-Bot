@@ -61,6 +61,7 @@ class Chat:
             "amy_noobs": Chat.amy_noobs,
             "quote": Chat.quote,
             "import": Chat.import_command,
+            "bird_loot": Chat.bird_loot,
         }
 
         dispatch[command["sub_command"]](ws, player, command)
@@ -182,3 +183,8 @@ class Chat:
         if command['payload'] == "antigravity":
             reply_string = "https://xkcd.com/353"
             Chat.send_chat_message(ws, reply_string)
+
+    @staticmethod
+    def bird_loot(ws, player: dict, command: dict):
+        reply_string = f"Here's the birdhouse loot table, {player['username'].capitalize()}: https://i.imgur.com/3Tka1n8.png"
+        Chat.send_chat_message(ws, reply_string)
