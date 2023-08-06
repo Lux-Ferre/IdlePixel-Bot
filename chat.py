@@ -107,7 +107,7 @@ class Chat:
             case "elite_achievement":
                 current_stats["elite_achievements"] += 1
             case _:
-                return
+                pass
 
         Db.set_config_row("chat_stats", current_stats)
 

@@ -65,7 +65,7 @@ class Db:
         return config_dict
 
     @staticmethod
-    def set_config_row(key: str, value: str | list):
+    def set_config_row(key: str, value: dict):
         query = "UPDATE configs SET data=? WHERE config=?"
 
         stringified_value = json.dumps(value)
