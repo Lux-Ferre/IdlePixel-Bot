@@ -9,8 +9,6 @@ from datetime import datetime
 from discord import SyncWebhook
 import rel
 import ssl
-import json
-import base64
 import traceback
 
 from utils import RepeatTimer, Db, Utils
@@ -127,34 +125,16 @@ def on_ws_open(ws):
 def on_chat(data: str):
     player, message = Chat.splitter(data)
 
-    amy_accounts = [
-        "amyjane1991",
-        "youallsuck",
-        "freeamyhugs",
-        "amybear",
-        "zombiebunny",
-        "idkwat2put",
-        "skyedemon",
-        "iloveamy",
-        "demonlilly",
-    ]
+    handle_automod(player, message)
 
     now = datetime.now()
     current_time = now.strftime("%H:%M")
 
     formatted_chat = f'*[{current_time}]* **{player["username"]}:** {message} '
 
+    Chat.track_chats(ws, player, message)
+
     log_message(formatted_chat)
-
-    handle_automod(player, message)
-
-    if player["username"] in amy_accounts and message[:7] != "!luxbot":
-        if "noob" in message:
-            noob_count = message.count("noob")
-            increment_amy_noobs(noob_count)
-        if "suck" in message:
-            suck_count = message.count("suck")
-            increment_amy_sucks(suck_count)
 
     if len(message) == 0:
         pass
@@ -169,7 +149,8 @@ def on_chat(data: str):
 
 
 def handle_automod(player: dict, message: str):
-    automod_flag_words = Db.read_config_row("automod_flag_words")
+    flag_words_dict = Db.read_config_row("automod_flag_words")
+    automod_flag_words = flag_words_dict["word_list"].split(",")
     message = message.lower()
     for trigger in automod_flag_words:
         if trigger in message:
@@ -183,13 +164,34 @@ def handle_automod(player: dict, message: str):
             break
 
 
-def on_yell(data: str):
+def on_yell(message: str):
     now = datetime.now()
     current_time = now.strftime("%H:%M")
 
-    formatted_chat = f'*[{current_time}]* **SERVER MESSAGE:** {data} '
+    formatted_chat = f'*[{current_time}]* **SERVER MESSAGE:** {message} '
 
     log_message(formatted_chat)
+
+    yell_dict = {"type": "", "player": message.split(" ")[0]}
+
+    if "found a diamond" in message:
+        yell_dict["type"] = "diamond"
+    elif "found a blood diamond" in message:
+        yell_dict["type"] = "blood_diamond"
+    elif "encountered a gem goblin" in message:
+        yell_dict["type"] = "gem_goblin"
+    elif "encountered a blood gem goblin" in message:
+        yell_dict["type"] = "blood_goblin"
+    elif "looted a monster sigil" in message:
+        yell_dict["type"] = "sigil"
+    elif "has just reached level 100" in message:
+        yell_dict["type"] = "max_level"
+    elif "has completed the elite" in message:
+        yell_dict["type"] = "elite_achievement"
+    else:
+        yell_dict["type"] = "unknown"
+
+    Chat.track_yells(yell_dict)
 
 
 def on_dialogue(data: str):
@@ -262,20 +264,6 @@ def handle_chat_command(player: dict, message: str):
 
     if reply_needed:
         Chat.send_chat_message(ws, reply_string)
-
-
-def increment_amy_noobs(count: int):
-    amy_noobs = int(Db.read_config_row("amy_noobs"))
-    amy_noobs += count
-
-    Db.set_config_row("amy_noobs", str(amy_noobs))
-
-
-def increment_amy_sucks(count: int):
-    amy_sucks = int(Db.read_config_row("amy_sucks"))
-    amy_sucks += count
-
-    Db.set_config_row("amy_sucks", str(amy_sucks))
 
 
 def handle_player_offline(player: str):
@@ -353,16 +341,6 @@ def log_message(message: str):
     else:
         dh_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
         lbt_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
-
-
-def add_config_to_database(key: str, value: str | list):
-    stringified_value = json.dumps(value)
-    encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
-
-    query = "INSERT INTO configs VALUES (?, ?)"
-    params = (key, encoded_string)
-
-    Db.set_db(query, params)
 
 
 if __name__ == "__main__":

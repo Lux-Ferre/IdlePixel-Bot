@@ -1,14 +1,12 @@
 import sqlite3
 import json
-import base64
 
 
-def add_config_to_database(key: str, value: str | list):
+def add_config_to_database(key: str, value: dict):
     stringified_value = json.dumps(value)
-    encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
 
     query = "INSERT INTO configs VALUES (?, ?)"
-    params = (key, encoded_string)
+    params = (key, stringified_value)
 
     cur.execute(query, params)
 
@@ -17,19 +15,14 @@ def add_config_to_database(key: str, value: str | list):
 
 def read_all_configs():
     res = cur.execute("SELECT config, data from configs")
-    encoded_configs = res.fetchall()
+    config_list = res.fetchall()
     loaded_configs = {}
 
-    for config in encoded_configs:
+    for config in config_list:
         key = config[0]
-        encoded_value = config[1]
+        value = json.loads(config[1])
 
-        if isinstance(encoded_value, str):
-            decoded_value = encoded_value
-        else:
-            decoded_value = json.loads(base64.b64decode(encoded_value))
-
-        loaded_configs[key] = decoded_value
+        loaded_configs[key] = value
 
     return loaded_configs
 
@@ -84,13 +77,12 @@ def get_pet_links(pet: str):
     return loaded_links
 
 
-def set_config_row(key: str, value: str | list):
+def set_config_row(key: str, value: dict):
     query = "UPDATE configs SET data=? WHERE config=?"
 
     stringified_value = json.dumps(value)
-    encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
 
-    params = (encoded_string, key)
+    params = (stringified_value, key)
     cur.execute(query, params)
 
     con.commit()
@@ -113,5 +105,26 @@ if __name__ == "__main__":
     # cur.execute("ALTER TABLE pet_links RENAME TO old_pet_links")
     # cur.execute("CREATE TABLE permissions(user UNIQUE, level)")
     # con.commit()
+
+    chat_stats = {'start_date': '06/08/23',
+                  'amy_noobs': 0,
+                  'amy_sucks': 0,
+                  'total_messages': 0,
+                  'amy_total': 0,
+                  'botofnades_requests': 0,
+                  'luxbot_requests': 0,
+                  'total_yells': 0,
+                  'diamonds_found': 0,
+                  'sigils_found': 0,
+                  'blood_diamonds_found': 0,
+                  'gem_goblin_encounters': 0,
+                  'blood_goblin_encounters': 0,
+                  "elite_achievements": 0,
+                  "max_levels": 0
+                  }
+
+    triggers = {
+        "word_list": 'nigger,nigga,fag,chink,beaner,f@g,defenstration'
+    }
 
     print(read_all_configs())

@@ -1,6 +1,5 @@
 import sqlite3
 import json
-import base64
 import requests
 import os
 from threading import Timer
@@ -56,23 +55,22 @@ class Db:
         return loaded_links
 
     @staticmethod
-    def read_config_row(key: str) -> list | str | dict:
+    def read_config_row(key: str) -> dict:
         query = "SELECT data FROM configs WHERE config=?"
         params = (key,)
 
-        encoded_config = Db.fetch_db(query, params, False)[0]
-        decoded_config = json.loads(base64.b64decode(encoded_config))
+        config_json = Db.fetch_db(query, params, False)[0]
+        config_dict = json.loads(config_json)
 
-        return decoded_config
+        return config_dict
 
     @staticmethod
     def set_config_row(key: str, value: str | list):
         query = "UPDATE configs SET data=? WHERE config=?"
 
         stringified_value = json.dumps(value)
-        encoded_string = base64.b64encode(stringified_value.encode('utf-8'))
 
-        params = (encoded_string, key)
+        params = (stringified_value, key)
 
         Db.set_db(query, params)
 

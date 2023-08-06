@@ -47,6 +47,71 @@ class Chat:
         ws.send(chat_string)
 
     @staticmethod
+    def track_chats(ws, player: dict, message: str):
+        amy_accounts = [
+            "amyjane1991",
+            "youallsuck",
+            "freeamyhugs",
+            "amybear",
+            "zombiebunny",
+            "idkwat2put",
+            "skyedemon",
+            "iloveamy",
+            "demonlilly",
+        ]
+
+        current_stats = Db.read_config_row("chat_stats")
+
+        current_stats["total_messages"] += 1
+
+        if len(message) < 1:
+            return
+
+        if player["username"] in amy_accounts:
+            current_stats["amy_total"] += 1
+
+            if message[0] != "!":
+                if "noob" in message:
+                    current_stats["amy_noobs"] += 1
+
+                if "suck" in message:
+                    current_stats["amy_sucks"] += 1
+
+        if message[0] == "!":
+            if message[:7] == "!luxbot":
+                current_stats["luxbot_requests"] += 1
+            else:
+                current_stats["botofnades_requests"] += 1
+
+        Db.set_config_row("chat_stats", current_stats)
+
+    @staticmethod
+    def track_yells(yell_dict: dict):
+        current_stats = Db.read_config_row("chat_stats")
+
+        current_stats["total_yells"] += 1
+
+        match yell_dict["type"]:
+            case "diamond":
+                current_stats["diamonds_found"] += 1
+            case "blood_diamond":
+                current_stats["blood_diamonds_found"] += 1
+            case "gem_goblin":
+                current_stats["gem_goblin_encounters"] += 1
+            case "blood_goblin":
+                current_stats["blood_goblin_encounters"] += 1
+            case "sigil":
+                current_stats["sigils_found"] += 1
+            case "max_level":
+                current_stats["max_levels"] += 1
+            case "elite_achievement":
+                current_stats["elite_achievements"] += 1
+            case _:
+                return
+
+        Db.set_config_row("chat_stats", current_stats)
+
+    @staticmethod
     def dispatcher(ws, player: dict, command: dict):
         dispatch = {
             "echo": Chat.echo,
@@ -169,8 +234,7 @@ class Chat:
 
     @staticmethod
     def amy_noobs(ws, player: dict, command: dict):
-        counter = Db.read_config_row("amy_noobs")
-        reply_string = f"Amy has said the word 'noob' {counter} times since 20/07/23."
+        reply_string = f"Amy said the word 'noob' 275 times between 20/07/23 and 06/08/23. She also said 'sucks' 46 times."
         Chat.send_chat_message(ws, reply_string)
 
     @staticmethod

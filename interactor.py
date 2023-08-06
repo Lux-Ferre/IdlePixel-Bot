@@ -121,17 +121,20 @@ class Interactor:
     def triggers(ws, command: dict):
         player = command["player"]
         content = command["content"]
-        trigger_list = Db.read_config_row("automod_flag_words")
+        flag_words_dict = Db.read_config_row("automod_flag_words")
+        trigger_list = flag_words_dict["word_list"].split(",")
         split_sub_command = content.split(";")
         subcommand = split_sub_command[0]
         payload = split_sub_command[1]
         if subcommand == "add":
             trigger_list.append(payload.strip())
-            Db.set_config_row("automod_flag_words", trigger_list)
+            trigger_dict = {"word_list": ",".join(trigger_list)}
+            Db.set_config_row("automod_flag_words", trigger_dict)
             Utils.send_custom_message(ws, player, f"{payload} has been added to automod triggers.")
         elif subcommand == "remove":
             trigger_list.remove(payload.strip())
-            Db.set_config_row("automod_flag_words", trigger_list)
+            trigger_dict = {"word_list": ",".join(trigger_list)}
+            Db.set_config_row("automod_flag_words", trigger_dict)
             Utils.send_custom_message(ws, player, f"{payload} has been removed from the automod triggers.")
 
     @staticmethod
@@ -224,10 +227,7 @@ class Interactor:
             help_string = Interactor.get_help_string(content)
             Utils.send_custom_message(ws, player, help_string)
 
-        if content == "nadesreply":
-            nadebot_reply = Db.read_config_row("nadebot_reply")
-            Utils.send_custom_message(ws, player, f"Sorry <player>, {nadebot_reply}.")
-        elif content == "triggers":
+        if content == "triggers":
             trigger_list = Db.read_config_row("automod_flag_words")
             Utils.send_custom_message(ws, player, f"Current triggers: {trigger_list}")
         elif content == "permissions":
