@@ -123,8 +123,4 @@ if __name__ == "__main__":
                   "max_levels": 0
                   }
 
-    triggers = {
-        "word_list": 'nigger,nigga,fag,chink,beaner,f@g,defenstration'
-    }
-
     print(read_all_configs())
