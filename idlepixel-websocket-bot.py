@@ -24,8 +24,8 @@ def get_env_var(env_var: str) -> str:
         raise
 
 
-def set_env_consts() -> dict:
-    env_const_list = {
+def get_env_consts() -> dict:
+    env_const_dict = {
         "IP_USERNAME": "",
         "IP_PASSWORD": "",
         "TESTING_HOOK_URL": "",
@@ -34,10 +34,10 @@ def set_env_consts() -> dict:
         "PASTEBIN_API_KEY": "",
     }
 
-    for key in env_const_list:
-        env_const_list[key] = get_env_var(key)
+    for key in env_const_dict:
+        env_const_dict[key] = get_env_var(key)
 
-    return env_const_list
+    return env_const_dict
 
 
 def is_development_mode():
@@ -343,7 +343,7 @@ def log_message(message: str):
 
 
 if __name__ == "__main__":
-    env_consts = set_env_consts()
+    env_consts = get_env_consts()
     development_mode = is_development_mode()
     online_mods = set()
 
