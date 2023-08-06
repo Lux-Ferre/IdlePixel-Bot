@@ -340,7 +340,6 @@ def log_message(message: str):
             the_file.write(message + '\n')
     else:
         dh_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
-        lbt_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
 
 
 if __name__ == "__main__":
@@ -348,7 +347,6 @@ if __name__ == "__main__":
     development_mode = is_development_mode()
     online_mods = set()
 
-    lbt_webhook = SyncWebhook.from_url(env_consts["LBT_DISCORD_HOOK_URL"])
     dh_webhook = SyncWebhook.from_url(env_consts["DH_DISCORD_HOOK_URL"])
     if development_mode:
         testing_webhook = SyncWebhook.from_url(env_consts["TESTING_HOOK_URL"])
