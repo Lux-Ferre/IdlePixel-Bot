@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 
 from utils import Db, Utils
 
@@ -127,6 +128,7 @@ class Chat:
             "quote": Chat.quote,
             "import": Chat.import_command,
             "bird_loot": Chat.bird_loot,
+            "chat_stats": Chat.chat_stats,
         }
 
         dispatch[command["sub_command"]](ws, player, command)
@@ -252,3 +254,70 @@ class Chat:
     def bird_loot(ws, player: dict, command: dict):
         reply_string = f"Here's the birdhouse loot table, {player['username'].capitalize()}: https://i.imgur.com/3Tka1n8.png"
         Chat.send_chat_message(ws, reply_string)
+
+    @staticmethod
+    def chat_stats(ws, player: dict, command: dict):
+        chat_stats = Db.read_config_row("chat_stats")
+        temp_start_date = "06/08/23 12:00"      # Database value needs to be updated with the time.
+
+        start_datetime = datetime.strptime(temp_start_date, "%d/%m/%y %H:%M")
+
+        delta = datetime.now() - start_datetime
+        total_time = round(delta.total_seconds())
+
+        chats = Chat.per_time(total_time, chat_stats["total_messages"])
+        nades = Chat.per_time(total_time, chat_stats["botofnades_requests"])
+        luxbot = Chat.per_time(total_time, chat_stats["luxbot_requests"])
+        yells = Chat.per_time(total_time, chat_stats["total_yells"])
+        diamonds = Chat.per_time(total_time, chat_stats["diamonds_found"])
+        blood_diamonds = Chat.per_time(total_time, chat_stats["blood_diamonds_found"])
+        sigils = Chat.per_time(total_time, chat_stats["sigils_found"])
+        goblins = Chat.per_time(total_time, chat_stats["gem_goblin_encounters"])
+        blood_goblins = Chat.per_time(total_time, chat_stats["blood_goblin_encounters"])
+        elites = Chat.per_time(total_time, chat_stats["elite_achievements"])
+        skills = Chat.per_time(total_time, chat_stats["max_levels"])
+
+        output_string = f'''
+        Since midday 06/08/23 there have been:
+        {chats[0]} chat messages sent!
+        {nades[0]} BotofNades commands sent!
+        {luxbot[0]} LuxBot commands sent!
+        {yells[0]} server messages sent!
+        Those include:
+        	- {diamonds[0]} diamonds found!
+        	- {blood_diamonds[0]} blood diamonds found!
+        	- {sigils[0]} monster sigils found!
+
+        	- {goblins[0]} gem goblin encounters!
+        	- {blood_goblins[0]} blood gem goblin encounters!
+
+        	- {elites[0]} elite achievement sets completed!
+        	- {skills[0]} skills reached the max level of 100!
+        ======================================================================================
+        Every day that means:
+        	- {chats[1]} chat messages and {yells[1]} server messages sent!
+        	- {diamonds[1]} diamonds, {blood_diamonds[1]} blood diamonds, and {sigils[1]} monster sigils have been found!
+        	- {goblins[1]} gem goblins, and {blood_goblins[1]} blood gem goblins have been fought!
+        	- {elites[1]} elites and {skills[1]} skills have been completed!
+        ======================================================================================
+        That works out to be:
+        	- {chats[2]} chat messages and {yells[2]} server messages sent!
+        	- {diamonds[2]} diamonds, {blood_diamonds[2]} blood diamonds, and {sigils[2]} monster sigils found!
+        	- {goblins[2]} gem goblins, and {blood_goblins[2]} blood gem goblins fought!
+        	- {elites[2]} elites and {skills[2]} skills completed!
+        every hour!
+        '''
+
+        pastebin_url = Utils.dump_to_pastebin(output_string, "10M")
+
+        Chat.send_chat_message(ws, f"{player['username'].capitalize()}, here are the currently tracked stats: {pastebin_url}")
+
+    @staticmethod
+    def per_time(total_time: int, stat_count: int) -> tuple[int, float, float]:
+        number_of_hours = round(total_time / 3600)
+        number_of_days = round(number_of_hours / 24)
+
+        count_per_hour = round(stat_count / number_of_hours, 3)
+        count_per_day = round(stat_count / number_of_days, 3)
+
+        return stat_count, count_per_day, count_per_hour
