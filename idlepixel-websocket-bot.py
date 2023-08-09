@@ -1,5 +1,6 @@
 import asyncio
 import os
+import random
 import discord
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
@@ -150,6 +151,15 @@ def on_chat(data: str):
 
 def handle_automod(player: dict, message: str):
     flag_words_dict = Db.read_config_row("automod_flag_words")
+
+    automod_replies = [
+        f"{player['username']} has been axed from chat.",
+        f"{player['username']} has been defenestrated.",
+        f"Buh-bye {player['username']}!",
+        "𝔹 𝕆 ℕ 𝕂 !",
+        f"{player['username']} is taking an enforced break from chat.",
+    ]
+
     automod_flag_words = flag_words_dict["word_list"].split(",")
     message = message.lower()
     for trigger in automod_flag_words:
@@ -160,7 +170,7 @@ def handle_automod(player: dict, message: str):
             reason = f"Using the word: {trigger}"
             is_ip = "false"
             Utils.mute_player(ws, player['username'], length, reason, is_ip)
-            Chat.send_chat_message(ws, f"{player['username']} has been axed from chat.")
+            Chat.send_chat_message(ws, random.choice(automod_replies))
             break
 
 
