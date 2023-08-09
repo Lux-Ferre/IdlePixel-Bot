@@ -68,6 +68,9 @@ class Chat:
         if len(message) < 1:
             return
 
+        if "noob" in message:
+            current_stats["total_noobs"] += 1
+
         if player["username"] in amy_accounts:
             current_stats["amy_total"] += 1
 
@@ -258,9 +261,9 @@ class Chat:
     @staticmethod
     def chat_stats(ws, player: dict, command: dict):
         chat_stats = Db.read_config_row("chat_stats")
-        temp_start_date = "06/08/23 12:00"      # Database value needs to be updated with the time.
+        start_date = chat_stats["start_date"]
 
-        start_datetime = datetime.strptime(temp_start_date, "%d/%m/%y %H:%M")
+        start_datetime = datetime.strptime(start_date, "%d/%m/%y %H:%M")
 
         delta = datetime.now() - start_datetime
         total_time = round(delta.total_seconds())
@@ -317,7 +320,14 @@ class Chat:
         number_of_hours = round(total_time / 3600)
         number_of_days = round(number_of_hours / 24)
 
-        count_per_hour = round(stat_count / number_of_hours, 3)
-        count_per_day = round(stat_count / number_of_days, 3)
+        if number_of_hours == 0:
+            count_per_hour = 0
+        else:
+            count_per_hour = round(stat_count / number_of_hours, 3)
+
+        if number_of_days == 0:
+            count_per_day = 0
+        else:
+            count_per_day = round(stat_count / number_of_days, 3)
 
         return stat_count, count_per_day, count_per_hour

@@ -106,21 +106,22 @@ if __name__ == "__main__":
     # cur.execute("CREATE TABLE permissions(user UNIQUE, level)")
     # con.commit()
 
-    chat_stats = {'start_date': '06/08/23',
-                  'amy_noobs': 0,
-                  'amy_sucks': 0,
+    chat_stats = {'start_date': '09/08/23 14:30',
                   'total_messages': 0,
-                  'amy_total': 0,
+                  'total_yells': 0,
+                  'total_noobs': 0,
                   'botofnades_requests': 0,
                   'luxbot_requests': 0,
-                  'total_yells': 0,
                   'diamonds_found': 0,
                   'sigils_found': 0,
                   'blood_diamonds_found': 0,
                   'gem_goblin_encounters': 0,
                   'blood_goblin_encounters': 0,
                   "elite_achievements": 0,
-                  "max_levels": 0
+                  "max_levels": 0,
+                  'amy_total': 0,
+                  'amy_noobs': 0,
+                  'amy_sucks': 0,
                   }
 
     print(read_all_configs())
