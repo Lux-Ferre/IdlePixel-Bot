@@ -281,7 +281,7 @@ class Chat:
         skills = Chat.per_time(total_time, chat_stats["max_levels"])
 
         output_string = f'''
-        Since midday 06/08/23 there have been:
+        Since {start_date} there have been:
         {chats[0]} chat messages sent!
         {nades[0]} BotofNades commands sent!
         {luxbot[0]} LuxBot commands sent!
