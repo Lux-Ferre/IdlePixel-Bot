@@ -11,6 +11,7 @@ from discord import SyncWebhook
 import rel
 import ssl
 import traceback
+from dataclasses import dataclass
 
 from utils import RepeatTimer, Db, Utils
 from chat import Chat
@@ -85,6 +86,18 @@ def on_ws_message(ws, raw_message):
         message_data = ""
 
     if message_type == "SET_ITEMS":
+        new_data = Utils.parse_item_data(message_data)
+        global_vars_instance.item_data.update(new_data)
+
+        if "event_upcomming_timer" not in global_vars_instance.item_data:
+            pass
+        else:
+            event_timer = int(global_vars_instance.item_data["event_upcomming_timer"])
+            event_type = global_vars_instance.item_data["event_name"]
+            if event_timer > 0 and not global_vars_instance.event_running:
+                start_event(event_timer=event_timer, event_type=event_type)
+            if event_timer < 1 and global_vars_instance.event_running:
+                end_event(event_type=event_type)
         if development_mode:
             print(f"{message_type}: {message_data}")
     elif message_type == "CHAT":
@@ -97,6 +110,9 @@ def on_ws_message(ws, raw_message):
         on_dialogue(message_data)
     elif message_type == "VALID_LOGIN":
         print("Signature verified. Login Successful.")
+    elif message_type == "EVENT_GLOBAL_PROGRESS":
+        global raw_event_scores
+        raw_event_scores = message_data
     elif message_type in ignore_messages:
         pass
     else:
@@ -107,6 +123,7 @@ def on_ws_error(ws, error):
     if isinstance(error, websocket.WebSocketConnectionClosedException):
         print("Connection closed. Retrying...")
     else:
+        print(error)
         traceback.print_tb(error.__traceback__)
 
 
@@ -301,7 +318,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
         "callback_id": callback_id
     }
 
-    response = Interactor.dispatcher(ws, False, command_data)
+    response = Interactor.dispatcher(ws, False, command_data, global_vars_instance.item_data)
 
     Utils.send_custom_message(ws, player, response)
 
@@ -352,10 +369,27 @@ def log_message(message: str):
         dh_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
 
 
+def start_event(event_timer: int, event_type: str):
+    pass
+
+
+def end_event(event_type: str):
+    global_vars_instance.event_running = False
+
+
 if __name__ == "__main__":
     env_consts = get_env_consts()
     development_mode = is_development_mode()
     online_mods = set()
+
+    @dataclass
+    class GlobalizedVars:
+        """Class to store pseudo-global variables"""
+        item_data: dict
+        event_running: bool = False
+        raw_event_scores: str = ""
+
+    global_vars_instance = GlobalizedVars(item_data={})
 
     dh_webhook = SyncWebhook.from_url(env_consts["DH_DISCORD_HOOK_URL"])
     if development_mode:

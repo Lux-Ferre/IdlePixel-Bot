@@ -143,3 +143,13 @@ class Utils:
             return 0
         else:
             return level[0]
+
+    @staticmethod
+    def parse_item_data(raw_data: str):
+        item_data = {}
+        split_data = raw_data.split("~")
+
+        for i in range(0, len(split_data), 2):
+            item_data[split_data[i]] = split_data[i + 1]
+
+        return item_data

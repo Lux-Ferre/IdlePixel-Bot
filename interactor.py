@@ -37,7 +37,7 @@ class Interactor:
         return help_string
 
     @staticmethod
-    def dispatcher(ws, getter: bool, command: dict):
+    def dispatcher(ws, getter: bool, command: dict, items=None):
         dispatch = {
             "echo": {
                 "permission": 2,
@@ -67,6 +67,10 @@ class Interactor:
                 "permission": 2,
                 "command": Interactor.help
             },
+            "get_item": {
+                "permission": 2,
+                "command": Interactor.get_item
+            },
             "permissions": {
                 "permission": 3,
                 "command": Interactor.permissions
@@ -94,7 +98,7 @@ class Interactor:
         else:
             return "Invalid command."
 
-        dispatch[command["command"]]["command"](ws, command)
+        dispatch[command["command"]]["command"](ws, command, items)
         return f"Command '{command['command']}' issued successfully."
 
     @staticmethod
@@ -213,10 +217,22 @@ class Interactor:
         Utils.send_custom_message(ws, player, f"Generic websocket command sent: {content}")
 
     @staticmethod
+    def get_item(ws, command: dict, items: dict):
+        player = command["player"]
+        content = command["content"]
+
+        if content in items:
+            item = items[content]
+        else:
+            item = "<Not Found>"
+
+        Utils.send_custom_message(ws, player, f"Item value is: {item}")
+
+    @staticmethod
     def help(ws, command: dict):
         player = command["player"]
         content = command["content"]
-        interactor_commands = Interactor.dispatcher(ws, True, {})
+        interactor_commands = Interactor.dispatcher(ws, True, {}, {})
         if content is None:
             help_string = "Command List"
             for com in interactor_commands:
