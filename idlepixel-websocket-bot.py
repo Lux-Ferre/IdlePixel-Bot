@@ -6,7 +6,7 @@ from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import websocket
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from discord import SyncWebhook
 import rel
 import ssl
@@ -89,14 +89,12 @@ def on_ws_message(ws, raw_message):
         new_data = Utils.parse_item_data(message_data)
         global_vars_instance.item_data.update(new_data)
 
-        if "event_upcomming_timer" not in global_vars_instance.item_data:
-            pass
-        else:
+        if "event_upcomming_timer" in global_vars_instance.item_data:
             event_timer = int(global_vars_instance.item_data["event_upcomming_timer"])
             event_type = global_vars_instance.item_data["event_name"]
             if event_timer > 0 and not global_vars_instance.event_running:
                 start_event(event_timer=event_timer, event_type=event_type)
-            if event_timer < 1 and global_vars_instance.event_running:
+            if event_timer < 0 and global_vars_instance.event_running:
                 end_event(event_type=event_type)
         if development_mode:
             print(f"{message_type}: {message_data}")
@@ -111,8 +109,7 @@ def on_ws_message(ws, raw_message):
     elif message_type == "VALID_LOGIN":
         print("Signature verified. Login Successful.")
     elif message_type == "EVENT_GLOBAL_PROGRESS":
-        global raw_event_scores
-        raw_event_scores = message_data
+        global_vars_instance.raw_event_scores = message_data
     elif message_type in ignore_messages:
         pass
     else:
@@ -370,11 +367,43 @@ def log_message(message: str):
 
 
 def start_event(event_timer: int, event_type: str):
-    pass
+    global_vars_instance.event_running = True
+
+    current_time = datetime.utcnow()
+    time_delta = timedelta(seconds=event_timer)
+
+    event_start_object = current_time + time_delta
+    event_start_string = event_start_object.strftime("%H:%M:%S")
+
+    global_vars_instance.last_event_start_time = event_start_object
+
+    declaration = f"A {event_type} event will start in {event_timer} seconds! ({event_start_string} UTC)"
+
+    print(declaration)
 
 
 def end_event(event_type: str):
     global_vars_instance.event_running = False
+    raw_data = global_vars_instance.raw_event_scores
+
+    parsed_scores = {}
+    split_data = raw_data.split("~")
+    for i in range(0, len(split_data), 2):
+        parsed_scores[split_data[i]] = split_data[i + 1]
+
+    sorted_scores = dict(sorted(parsed_scores.items(), key=lambda item: item[1]))
+
+    global_vars_instance.parsed_event_score = sorted_scores
+    global_vars_instance.last_event_type = event_type
+
+    end_time = global_vars_instance.last_event_end_time.strftime("%H:%M:%S")
+
+    formatted_scores = f"The last event was a {event_type} event and it ended at {end_time}. The final scores were: \n"
+
+    for rank, username in enumerate(sorted_scores):
+        formatted_scores += f"{rank + 1}: {username} - {sorted_scores[username]}\n"
+
+    print(formatted_scores)
 
 
 if __name__ == "__main__":
@@ -386,6 +415,11 @@ if __name__ == "__main__":
     class GlobalizedVars:
         """Class to store pseudo-global variables"""
         item_data: dict
+        last_event_type: str = ""
+        last_event_ending_declaration: str = ""
+        parsed_event_score = dict = {}
+        last_event_start_time: datetime = None
+        last_event_end_time: datetime = None
         event_running: bool = False
         raw_event_scores: str = ""
 
