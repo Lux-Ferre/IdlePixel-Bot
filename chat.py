@@ -268,6 +268,7 @@ class Chat:
         delta = datetime.now() - start_datetime
         total_time = round(delta.total_seconds())
 
+        # Storing this in a dictionary would mak this section dryer but would make the output string a lot less readable
         chats = Chat.per_time(total_time, chat_stats["total_messages"])
         nades = Chat.per_time(total_time, chat_stats["botofnades_requests"])
         luxbot = Chat.per_time(total_time, chat_stats["luxbot_requests"])

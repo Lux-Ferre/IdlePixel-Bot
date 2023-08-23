@@ -33,6 +33,7 @@ def get_env_consts() -> dict:
         "TESTING_HOOK_URL": "",
         "LBT_DISCORD_HOOK_URL": "",
         "DH_DISCORD_HOOK_URL": "",
+        "EVENT_HOOK_URL": "",
         "PASTEBIN_API_KEY": "",
     }
 
@@ -92,9 +93,12 @@ def on_ws_message(ws, raw_message):
         if "event_upcomming_timer" in global_vars_instance.item_data:
             event_timer = int(global_vars_instance.item_data["event_upcomming_timer"])
             event_type = global_vars_instance.item_data["event_name"]
+            running_timer = 1
+            if "event_active_timer" in global_vars_instance.item_data:
+                running_timer = int(global_vars_instance.item_data["event_active_timer"])
             if event_timer > 0 and not global_vars_instance.event_running:
                 start_event(event_timer=event_timer, event_type=event_type)
-            if event_timer < 0 and global_vars_instance.event_running:
+            if running_timer < 0 and global_vars_instance.event_running:
                 end_event(event_type=event_type)
         if development_mode:
             print(f"{message_type}: {message_data}")
@@ -315,7 +319,7 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
         "callback_id": callback_id
     }
 
-    response = Interactor.dispatcher(ws, False, command_data, global_vars_instance.item_data)
+    response = Interactor.dispatcher(ws, False, command_data)
 
     Utils.send_custom_message(ws, player, response)
 
@@ -377,9 +381,13 @@ def start_event(event_timer: int, event_type: str):
 
     global_vars_instance.last_event_start_time = event_start_object
 
-    declaration = f"A {event_type} event will start in {event_timer} seconds! ({event_start_string} UTC)"
+    declaration = f"<@&1142985685184282705>, A {event_type} event will start in {event_timer} seconds! ({event_start_string} UTC)"
 
-    print(declaration)
+    allowed = discord.AllowedMentions(everyone=False, users=False,
+                                      roles=[discord.Object(id="1142985685184282705", type=discord.Role)])
+
+    event_webhook = SyncWebhook.from_url(env_consts["EVENT_HOOK_URL"])
+    event_webhook.send(content=declaration, allowed_mentions=allowed)
 
 
 def end_event(event_type: str):
@@ -389,9 +397,9 @@ def end_event(event_type: str):
     parsed_scores = {}
     split_data = raw_data.split("~")
     for i in range(0, len(split_data), 2):
-        parsed_scores[split_data[i]] = split_data[i + 1]
+        parsed_scores[split_data[i]] = int(split_data[i + 1])
 
-    sorted_scores = dict(sorted(parsed_scores.items(), key=lambda item: item[1]))
+    sorted_scores = dict(sorted(parsed_scores.items(), key=lambda item: item[1], reverse=True))
 
     global_vars_instance.parsed_event_score = sorted_scores
     global_vars_instance.last_event_type = event_type
