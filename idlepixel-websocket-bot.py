@@ -2,6 +2,7 @@ import asyncio
 import os
 import random
 import discord
+import requests
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import websocket
@@ -96,9 +97,9 @@ def on_ws_message(ws, raw_message):
             running_timer = 1
             if "event_active_timer" in global_vars_instance.item_data:
                 running_timer = int(global_vars_instance.item_data["event_active_timer"])
-            if event_timer > 0 and not global_vars_instance.event_running:
-                start_event(event_timer=event_timer, event_type=event_type)
-            if running_timer < 0 and global_vars_instance.event_running:
+            if event_timer > 0 and not global_vars_instance.event_countdown_started:
+                start_event_countdown(event_timer=event_timer, event_type=event_type)
+            if running_timer < 0 and global_vars_instance.event_countdown_started:
                 end_event(event_type=event_type)
         if development_mode:
             print(f"{message_type}: {message_data}")
@@ -370,8 +371,8 @@ def log_message(message: str):
         dh_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
 
 
-def start_event(event_timer: int, event_type: str):
-    global_vars_instance.event_running = True
+def start_event_countdown(event_timer: int, event_type: str):
+    global_vars_instance.event_countdown_started = True
 
     current_time = datetime.utcnow()
     time_delta = timedelta(seconds=event_timer)
@@ -386,12 +387,13 @@ def start_event(event_timer: int, event_type: str):
     allowed = discord.AllowedMentions(everyone=False, users=False,
                                       roles=[discord.Object(id="1142985685184282705", type=discord.Role)])
 
-    event_webhook = SyncWebhook.from_url(env_consts["EVENT_HOOK_URL"])
-    event_webhook.send(content=declaration, allowed_mentions=allowed)
+    with requests.Session as session:
+        event_webhook = SyncWebhook.from_url(env_consts["EVENT_HOOK_URL"], session=session)
+        event_webhook.send(content=declaration, allowed_mentions=allowed)
 
 
 def end_event(event_type: str):
-    global_vars_instance.event_running = False
+    global_vars_instance.event_countdown_started = False
     raw_data = global_vars_instance.raw_event_scores
 
     parsed_scores = {}
@@ -428,7 +430,7 @@ if __name__ == "__main__":
         parsed_event_score = dict = {}
         last_event_start_time: datetime = None
         last_event_end_time: datetime = None
-        event_running: bool = False
+        event_countdown_started: bool = False
         raw_event_scores: str = ""
 
     global_vars_instance = GlobalizedVars(item_data={})
