@@ -239,7 +239,20 @@ class Chat:
 
     @staticmethod
     def amy_noobs(ws, player: dict, command: dict):
-        reply_string = f"Amy said the word 'noob' 275 times between 20/07/23 and 06/08/23. She also said 'sucks' 46 times."
+        chat_stats = Db.read_config_row("chat_stats")
+
+        start_date = chat_stats["start_date"]
+        start_datetime = datetime.strptime(start_date, "%d/%m/%y %H:%M")
+        delta = datetime.now() - start_datetime
+        total_time = round(delta.total_seconds())
+
+        amy_noobs = Chat.per_time(total_time, chat_stats["amy_noobs"])
+        amy_total = chat_stats["amy_total"]
+        total_noobs = chat_stats["total_noobs"]
+
+        noobs_per_amy = round((amy_noobs[0] / amy_total) * 100)
+        noobs_per_total = round((amy_noobs[0] / total_noobs) * 100)
+        reply_string = f"Since {start_date}, Amy has said noob {amy_noobs[0]} times. That's {round(amy_noobs[1])} times per day; making up {noobs_per_amy}% of her messages, and {noobs_per_total}% of the times noob is said in chat."
         Chat.send_chat_message(ws, reply_string)
 
     @staticmethod
@@ -318,6 +331,10 @@ class Chat:
 
     @staticmethod
     def per_time(total_time: int, stat_count: int) -> tuple[int, float, float]:
+        """
+        Takes a time in seconds(int) and a stat_count(int),
+        returns tuple of stat_count(int), count_per_day(float), count_per_hour(float)
+        """
         number_of_hours = round(total_time / 3600)
         number_of_days = round(number_of_hours / 24)
 
