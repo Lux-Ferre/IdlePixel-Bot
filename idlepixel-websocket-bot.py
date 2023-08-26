@@ -7,7 +7,7 @@ from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import websocket
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from discord import SyncWebhook
 import rel
 import ssl
@@ -374,20 +374,21 @@ def log_message(message: str):
 def start_event_countdown(event_timer: int, event_type: str):
     global_vars_instance.event_countdown_started = True
 
-    current_time = datetime.utcnow()
+    current_time = datetime.now(timezone.utc)
     time_delta = timedelta(seconds=event_timer)
 
     event_start_object = current_time + time_delta
-    event_start_string = event_start_object.strftime("%H:%M:%S")
+    timestamp = int(event_start_object.timestamp())
+    event_start_string = f"<t:{timestamp}:f>"
 
     global_vars_instance.last_event_start_time = event_start_object
 
-    declaration = f"<@&1142985685184282705>, A {event_type} event will start in {event_timer} seconds! ({event_start_string} UTC)"
+    declaration = f"<@&1142985685184282705>, A {event_type} event will start in {event_timer} seconds! ({event_start_string})"
 
     allowed = discord.AllowedMentions(everyone=False, users=False,
                                       roles=[discord.Object(id="1142985685184282705", type=discord.Role)])
 
-    with requests.Session as session:
+    with requests.Session() as session:
         event_webhook = SyncWebhook.from_url(env_consts["EVENT_HOOK_URL"], session=session)
         event_webhook.send(content=declaration, allowed_mentions=allowed)
 
