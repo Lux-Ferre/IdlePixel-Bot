@@ -125,6 +125,7 @@ def on_ws_error(ws, error):
     if isinstance(error, websocket.WebSocketConnectionClosedException):
         print("Connection closed. Retrying...")
     else:
+        print(datetime.now().strftime("%d/%m/%Y, %H:%M:%S"))
         print(error)
         traceback.print_tb(error.__traceback__)
 
