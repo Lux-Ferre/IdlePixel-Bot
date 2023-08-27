@@ -125,7 +125,7 @@ def on_ws_error(ws, error):
     if isinstance(error, websocket.WebSocketConnectionClosedException):
         print("Connection closed. Retrying...")
     else:
-        print(datetime.now().strftime("%d/%m/%Y, %H:%M:%S"))
+        print(datetime.now().strftime("%d/%m/%Y , %H:%M:%S"))
         print(error)
         traceback.print_tb(error.__traceback__)
 
@@ -285,7 +285,11 @@ def handle_chat_command(player: dict, message: str):
                 reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command format."
                 reply_needed = True
             else:
-                Chat.dispatcher(ws, player, command)
+                errored, msg = Chat.dispatcher(ws, player, command)
+                if errored:
+                    print(msg)
+                    reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command."
+                    reply_needed = True
         elif perm_level < 0:
             pass
         else:
@@ -408,9 +412,9 @@ def end_event(event_type: str):
     global_vars_instance.parsed_event_score = sorted_scores
     global_vars_instance.last_event_type = event_type
 
-    end_time = global_vars_instance.last_event_end_time.strftime("%H:%M:%S")
+    # end_time = global_vars_instance.last_event_end_time.strftime("%H:%M:%S")
 
-    formatted_scores = f"The last event was a {event_type} event and it ended at {end_time}. The final scores were: \n"
+    formatted_scores = f"The last event was a {event_type} event. The final scores were: \n"
 
     for rank, username in enumerate(sorted_scores):
         formatted_scores += f"{rank + 1}: {username} - {sorted_scores[username]}\n"

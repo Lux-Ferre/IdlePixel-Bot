@@ -134,7 +134,12 @@ class Chat:
             "chat_stats": Chat.chat_stats,
         }
 
-        dispatch[command["sub_command"]](ws, player, command)
+        dispatched_command = dispatch.get(command["sub_command"], None)
+
+        if dispatched_command is None:
+            return True, "Invalid LuxBot command issued."
+
+        dispatched_command(ws, player, command)
 
     @staticmethod
     def echo(ws, player: dict, command: dict):
