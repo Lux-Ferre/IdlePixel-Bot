@@ -116,6 +116,49 @@ class Chat:
         Db.set_config_row("chat_stats", current_stats)
 
     @staticmethod
+    def get_chat_stat(ws, player: dict, message: str):
+        required_value = None
+
+        if "amy" in message:
+            if "suck" in message:
+                required_value = "amy_sucks"
+            elif "noob" in message:
+                required_value = "amy_noobs"
+            elif "spoken" in message or "messages" in message:
+                required_value = "amy_total"
+        elif "noob" in message:
+            required_value = "total_noobs"
+        elif "other bot" in message:
+            required_value = "botofnades_requests"
+        elif "blood diamonds" in message:
+            required_value = "blood_diamonds_found"
+        elif "diamonds" in message:
+            required_value = "diamonds_found"
+        elif "blood gem goblin" in message:
+            required_value = "blood_goblin_encounters"
+        elif "gem goblin" in message:
+            required_value = "gem_goblin_encounters"
+        elif "server message" in message:
+            required_value = "total_yells"
+        elif "elite" in message:
+            required_value = "elite_achievements"
+        elif "sigils" in message:
+            required_value = "sigils_found"
+        elif "asked you" in message:
+            required_value = "luxbot_requests"
+        elif "max" in message:
+            required_value = "max_levels"
+        elif "messages" in message:
+            required_value = "total_messages"
+
+        if required_value is not None:
+            chat_stats = Db.read_config_row("chat_stats")
+            requested_value = chat_stats[required_value]
+
+            response = f"Here's the number you wanted Lux: {requested_value}. Get it yourself next time"
+            Chat.send_chat_message(ws, response)
+
+    @staticmethod
     def dispatcher(ws, player: dict, command: dict):
         dispatch = {
             "echo": Chat.echo,

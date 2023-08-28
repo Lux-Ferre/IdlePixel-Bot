@@ -148,12 +148,16 @@ def on_chat(data: str):
 
     handle_automod(player, message)
 
+    Chat.track_chats(ws, player, message)
+
+    if player["username"] in ["lux", "luxferre", "axe", "luxchatter"]:
+        if message[0] != "!" and "luxbot" in message and "chat stat" in message:
+            Chat.get_chat_stat(ws, player, message)
+
     now = datetime.now()
     current_time = now.strftime("%H:%M")
 
     formatted_chat = f'*[{current_time}]* **{player["username"]}:** {message} '
-
-    Chat.track_chats(ws, player, message)
 
     log_message(formatted_chat)
 
