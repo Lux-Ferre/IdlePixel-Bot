@@ -191,7 +191,7 @@ def handle_automod(player: dict, message: str):
             is_ip = "false"
             Utils.mute_player(ws, player['username'], length, reason, is_ip)
             Chat.send_chat_message(ws, random.choice(automod_replies))
-            break
+            return
 
 
 def on_yell(message: str):

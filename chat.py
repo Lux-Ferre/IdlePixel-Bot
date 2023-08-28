@@ -132,6 +132,7 @@ class Chat:
             "import": Chat.import_command,
             "bird_loot": Chat.bird_loot,
             "chat_stats": Chat.chat_stats,
+            "help": Chat.help,
         }
 
         dispatched_command = dispatch.get(command["sub_command"], None)
@@ -286,7 +287,7 @@ class Chat:
         delta = datetime.now() - start_datetime
         total_time = round(delta.total_seconds())
 
-        # Storing this in a dictionary would mak this section dryer but would make the output string a lot less readable
+        # Storing this in a dictionary would make this section dryer but would make the output string a lot less readable
         chats = Chat.per_time(total_time, chat_stats["total_messages"])
         nades = Chat.per_time(total_time, chat_stats["botofnades_requests"])
         luxbot = Chat.per_time(total_time, chat_stats["luxbot_requests"])
@@ -354,3 +355,43 @@ class Chat:
             count_per_day = round(stat_count / number_of_days, 3)
 
         return stat_count, count_per_day, count_per_hour
+
+    @staticmethod
+    def help(ws, player: dict, command: dict):
+        help_strings = {
+            "echo": "Repeats your message back into chat. [!luxbot:echo<message>]",
+            "combat": "Replies with a link to the combat guide on the wiki.",
+            "dho_maps": "Replies with the solutions to the Offline treasure maps.",
+            "scripts": "Replies with a link to the QoL scripts wiki page.",
+            "vega": "Replies with a <random> photo of Vega. [!luxbot:vega <opt:title>]",
+            "wiki": "Replies with a link to the wiki. [!luxbot:wiki <opt:page_title>]",
+            "bear": "Replies with a <random> photo of Bear. [!luxbot:bear <opt:title>]",
+            "pet": "Replies with a random photo from the pets database. [!luxbot:pet <opt:pet_name>]",
+            "pet_stats": "Replies with a pastebin link containing info about the pets database.",
+            "amy_noobs": "Tells you the frequency with which Amy says the word 'noob'.",
+            "quote": "Replies with a random stored quote. (Only one placeholder quote atm.)",
+            "import": "Easteregg. [!luxbot:import <REDACTED>]",
+            "bird_loot": "Replies with a screenshot of the birdhouse loot list.",
+            "chat_stats": "Replies with a pastebin link containing various chat statistics.",
+            "help": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
+        }
+
+        payload = command["payload"]
+        username = player["username"]
+
+        if payload is None:
+            help_string = "Command List"
+            for com in help_strings:
+                help_string += f" | {com}"
+
+            Chat.send_chat_message(ws, help_string)
+            return False, "Success"
+
+        if payload not in help_strings:
+            help_string = f"Sorry {username}, {payload} is not a valid LuxBot command."
+            Chat.send_chat_message(ws, help_string)
+            return False, "Success"
+
+        help_string = help_strings[payload]
+        Chat.send_chat_message(ws, help_string)
+        return False, "Success"
