@@ -140,27 +140,33 @@ class Chat:
         if dispatched_command is None:
             return True, "Invalid LuxBot command issued."
 
-        dispatched_command(ws, player, command)
+        errored, msg = dispatched_command(ws, player, command)
+
+        return errored, msg
 
     @staticmethod
     def echo(ws, player: dict, command: dict):
         reply_string = f"Echo: {player['username']}: {command['payload']}"
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
         
     @staticmethod
     def combat(ws, player: dict, command: dict):
         reply_string = f"https://idle-pixel.wiki/index.php/Combat_Guide"
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def dho_maps(ws, player: dict, command: dict):
         reply_string = f"Offline map solutions: https://prnt.sc/Mdd-AKMIHfLz"
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def scripts(ws, player: dict, command: dict):
         reply_string = f"https://idle-pixel.wiki/index.php/Scripts"
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def vega(ws, player: dict, command: dict):
@@ -175,6 +181,7 @@ class Chat:
             reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
 
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def wiki(ws, player: dict, command: dict):
@@ -184,6 +191,7 @@ class Chat:
             reply_string = f"Wiki home page: https://idle-pixel.wiki/index.php/Main_Page"
 
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def bear(ws, player: dict, command: dict):
@@ -201,6 +209,7 @@ class Chat:
             reply_string = "Bawbag, " + reply_string
 
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def pet(ws, player: dict, command: dict):
@@ -222,6 +231,7 @@ class Chat:
             reply_string = "Bawbag, " + reply_string
 
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def pet_stats(ws, player: dict, command: dict):
@@ -242,6 +252,7 @@ class Chat:
         pastebin_url = Utils.dump_to_pastebin(output_string, "10M")
 
         Chat.send_chat_message(ws, pastebin_url)
+        return False, "Success"
 
     @staticmethod
     def amy_noobs(ws, player: dict, command: dict):
@@ -260,11 +271,13 @@ class Chat:
         noobs_per_total = round((amy_noobs[0] / total_noobs) * 100)
         reply_string = f"Since {start_date}, Amy has said noob {amy_noobs[0]} times. That's {round(amy_noobs[1])} times per day; making up {noobs_per_amy}% of her messages, and {noobs_per_total}% of the times noob is said in chat."
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def quote(ws, player: dict, command: dict):
         reply_string = "Your 'random' quote is: https://prnt.sc/E4RHZ-3zj3JB"
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def import_command(ws, player: dict, command: dict):
@@ -272,10 +285,13 @@ class Chat:
             reply_string = "https://xkcd.com/353"
             Chat.send_chat_message(ws, reply_string)
 
+        return False, "Success"
+
     @staticmethod
     def bird_loot(ws, player: dict, command: dict):
         reply_string = f"Here's the birdhouse loot table, {player['username'].capitalize()}: https://i.imgur.com/3Tka1n8.png"
         Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
 
     @staticmethod
     def chat_stats(ws, player: dict, command: dict):
@@ -334,6 +350,7 @@ class Chat:
         pastebin_url = Utils.dump_to_pastebin(output_string, "10M")
 
         Chat.send_chat_message(ws, f"{player['username'].capitalize()}, here are the currently tracked stats: {pastebin_url}")
+        return False, "Success"
 
     @staticmethod
     def per_time(total_time: int, stat_count: int) -> tuple[int, float, float]:

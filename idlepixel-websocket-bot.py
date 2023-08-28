@@ -206,7 +206,7 @@ def on_yell(message: str):
 
     if "found a diamond" in message:
         yell_dict["type"] = "diamond"
-    elif "found a blood diamond" in message:
+    elif "found a legendary blood diamond" in message:
         yell_dict["type"] = "blood_diamond"
     elif "encountered a gem goblin" in message:
         yell_dict["type"] = "gem_goblin"
