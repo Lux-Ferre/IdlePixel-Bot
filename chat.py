@@ -175,6 +175,7 @@ class Chat:
             "import": Chat.import_command,
             "bird_loot": Chat.bird_loot,
             "chat_stats": Chat.chat_stats,
+            "fixed_fix": Chat.fixed_fix,
             "help": Chat.help,
         }
 
@@ -396,6 +397,12 @@ class Chat:
         return False, "Success"
 
     @staticmethod
+    def fixed_fix(ws, player: dict, command: dict):
+        reply_string = f"Here's the fix for Fixed, {player['username'].capitalize()}: https://prnt.sc/tYv2ZlTgXPPx"
+        Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
+
+    @staticmethod
     def per_time(total_time: int, stat_count: int) -> tuple[int, float, float]:
         """
         Takes a time in seconds(int) and a stat_count(int),
@@ -433,6 +440,7 @@ class Chat:
             "import": "Easteregg. [!luxbot:import <REDACTED>]",
             "bird_loot": "Replies with a screenshot of the birdhouse loot list.",
             "chat_stats": "Replies with a pastebin link containing various chat statistics.",
+            "fixed_fix": "A screenshot of the fix to Kape's DHP Fixed script, generously provided by strawberry.",
             "help": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
         }
 
