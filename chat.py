@@ -448,6 +448,7 @@ class Chat:
             "bird_loot": "Replies with a screenshot of the birdhouse loot list.",
             "chat_stats": "Replies with a pastebin link containing various chat statistics.",
             "fixed_fix": "A screenshot of the fix to Kape's DHP Fixed script, generously provided by strawberry.",
+            "pirate_loot": "A screenshot of the pirate cost and odds table.",
             "help": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
         }
 
