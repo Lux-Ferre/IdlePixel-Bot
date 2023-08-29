@@ -177,6 +177,7 @@ class Chat:
             "chat_stats": Chat.chat_stats,
             "fixed_fix": Chat.fixed_fix,
             "pirate_loot": Chat.pirate_loot,
+            "sigil_list": Chat.sigil_list,
             "help": Chat.help,
         }
 
@@ -410,6 +411,12 @@ class Chat:
         return False, "Success"
 
     @staticmethod
+    def sigil_list(ws, player: dict, command: dict):
+        reply_string = f"{player['username'].capitalize()} here's (an out-dated) image of Lux's sigils: https://prnt.sc/zs7CX4WjB8q8"
+        Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
+
+    @staticmethod
     def per_time(total_time: int, stat_count: int) -> tuple[int, float, float]:
         """
         Takes a time in seconds(int) and a stat_count(int),
@@ -449,6 +456,7 @@ class Chat:
             "chat_stats": "Replies with a pastebin link containing various chat statistics.",
             "fixed_fix": "A screenshot of the fix to Kape's DHP Fixed script, generously provided by strawberry.",
             "pirate_loot": "A screenshot of the pirate cost and odds table.",
+            "sigil_list": "A screenshot of Lux's sigil collection.",
             "help": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
         }
 
