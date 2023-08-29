@@ -169,7 +169,26 @@ class Chat:
 
             request_per_time = Chat.per_time(total_time, requested_value)
 
-            response = f"Here's the number you wanted Lux: {request_per_time[time_frame]}. Get it yourself next time"
+            match time_frame:
+                case 1:
+                    response_timeframe = "every day"
+                case 2:
+                    response_timeframe = "every hour"
+                case _:
+                    response_timeframe = ""
+
+            response_value = f"{request_per_time[time_frame]} {response_timeframe}"
+
+            response_patterns = [
+                f"Here's the number you wanted Lux: {response_value}. Get it yourself next time.",
+                f"Ugh. Fine. Here: {response_value}.",
+                f"You're so lazy! Here: {response_value}.",
+                f"-.- {response_value}",
+                f"*sigh* {response_value}",
+                f"Damn slave driver... {response_value}...",
+            ]
+
+            response = random.choice(response_patterns)
             Chat.send_chat_message(ws, response)
 
     @staticmethod
