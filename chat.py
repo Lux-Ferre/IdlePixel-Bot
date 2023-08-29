@@ -403,6 +403,12 @@ class Chat:
         return False, "Success"
 
     @staticmethod
+    def pirate_loot(ws, player: dict, command: dict):
+        reply_string = f"{player['username'].capitalize()} here's the pirate loot and cost table: https://prnt.sc/tLjabu1LGtsX"
+        Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
+
+    @staticmethod
     def per_time(total_time: int, stat_count: int) -> tuple[int, float, float]:
         """
         Takes a time in seconds(int) and a stat_count(int),
