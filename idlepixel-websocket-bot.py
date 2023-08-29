@@ -20,14 +20,16 @@ from interactor import Interactor
 
 
 def get_env_var(env_var: str) -> str:
+    """Return environment variable of key ``env_var``. Will stop application if not found."""
     try:
         return os.environ[env_var]
     except KeyError:
-        print("Missing environment variable")
+        print(f"Missing environment variable: {env_var}")
         raise
 
 
 def get_env_consts() -> dict:
+    """Return dict containing all required environment variables at application launch."""
     env_const_dict = {
         "IP_USERNAME": "",
         "IP_PASSWORD": "",
@@ -45,6 +47,7 @@ def get_env_consts() -> dict:
 
 
 def is_development_mode():
+    """Return True if development mode command line argument present."""
     cl_args = sys.argv
     dev_mode = False
 
@@ -57,6 +60,17 @@ def is_development_mode():
 
 
 async def get_signature() -> str:
+    """
+    Uses a Playwright headless browser to authenticate login.
+
+    User authentication is done via HTTP, the server sends an authentication signature to the client which is then
+    sent as the first frame over the websocket.
+
+    A browser is used to comply with CORS security measures.
+
+    :return: Authentication signature
+    :rtype: str
+    """
     async with async_playwright() as p:
         browser_type = p.chromium
         browser = await browser_type.launch_persistent_context("persistent_context")
@@ -78,7 +92,17 @@ async def get_signature() -> str:
         return signature
 
 
-def on_ws_message(ws, raw_message):
+def on_ws_message(ws, raw_message: str):
+    """
+    Primary handler for received websocket frames.
+
+    Parses DHP websocket format by splitting the data into the frame type and payload.
+    Passes payload on to appropriate secondary handlers, defaults to printing unknown frame types.
+
+    :param ws: websocket
+    :param raw_message: String containing websocket data
+    :type raw_message: str
+    """
     ignore_messages = ["SET_COUNTRY"]
     split_message = raw_message.split("=", 1)
     if len(split_message) > 1:
@@ -122,6 +146,16 @@ def on_ws_message(ws, raw_message):
 
 
 def on_ws_error(ws, error):
+    """
+    Top level error handler.
+
+    If websocket connection drops, will print a retrying message to notify before ``rel`` retries.
+    Otherwise, prints timestamp, error, and traceback.
+
+    :param ws: websocket
+    :param error: Exception object
+    """
+
     if isinstance(error, websocket.WebSocketConnectionClosedException):
         print("Connection closed. Retrying...")
     else:
@@ -131,10 +165,18 @@ def on_ws_error(ws, error):
 
 
 def on_ws_close(ws, close_status_code, close_msg):
+    """Called when websocket is closed by server."""
     print("### closed ###")
 
 
 def on_ws_open(ws):
+    """
+    Called when websocket opens.
+
+    Acquires authentication signature then sends it as first frame over websocket.
+
+    :param ws: websocket
+    """
     print("Opened connection.")
     print("Acquiring signature...")
     signature = asyncio.run(get_signature())
@@ -144,6 +186,20 @@ def on_ws_open(ws):
 
 
 def on_chat(data: str):
+    """
+    Handler for ``CHAT`` websocket frames.
+
+    Passes player information and chat message into each further function that requires it. In order these are:
+        - Automoderation
+        - Statistic tracking
+        - Dynamic statistic command
+        - Discord mirror
+        - Formatted chat commands
+        - Mod caller
+    :param data:
+    :type data: str
+    """
+
     player, message = Chat.splitter(data)
 
     handle_automod(player, message)
@@ -174,6 +230,16 @@ def on_chat(data: str):
 
 
 def handle_automod(player: dict, message: str):
+    """
+    Scans chat messages for restricted words and issues a mute instruction if one is present.
+
+    Restricted words are stored in the configs db table.
+
+    :param player: Parsed player information [username, sigil, tag, level]
+    :type player: dict
+    :param message: Chat message content
+    :type message: str
+    """
     flag_words_dict = Db.read_config_row("automod_flag_words")
 
     automod_replies = [
@@ -199,9 +265,19 @@ def handle_automod(player: dict, message: str):
 
 
 def on_yell(message: str):
+    """
+    Handler for ``YELL`` websocket frames (called server messages in chat.)
+
+    Mirrors messages to discord.
+    Parses and passes message to chat stat tracker.
+
+    :param message: Yell data payload
+    :type message: str
+    :return:
+    """
+
     now = datetime.now()
     current_time = now.strftime("%H:%M")
-
     formatted_chat = f'*[{current_time}]* **SERVER MESSAGE:** {message} '
 
     log_message(formatted_chat)
@@ -229,6 +305,15 @@ def on_yell(message: str):
 
 
 def on_dialogue(data: str):
+    """
+    Handler for ``DIALOGUE`` websocket frames.
+
+    Parses ``WHOIS`` dialogues, sending the player list over ``CUSTOM`` to accounts with level 3 permissions.
+    Prints data otherwise.
+
+    :param data:
+    :type data: str
+    """
     if data[:5] == "WHOIS":
         cropped_data = data[15:]
         whois_list = cropped_data.split("<br />")[:-1]
@@ -247,6 +332,20 @@ def on_dialogue(data: str):
 
 
 def on_custom(data: str):
+    """
+    Handler for ``CUSTOM`` websocket frames.
+
+    Customs are designed for sending data between players sent via the server.
+    Server will respond with a ``PLAYER_OFFLINE`` custom if one is sent to an offline player.
+
+    Customs are parsed according to Anwin's formatting for the IP+ client mod library:
+        - CUSTOM=player_username~callback_id:plugin_name:command:payload
+
+    Data is then passed to further handlers according to which plugin has sent the custom message.
+
+    :param data:
+    :type data: str
+    """
     [player, data_packet] = data.split("~", 1)
 
     if data_packet == "PLAYER_OFFLINE":
@@ -278,6 +377,16 @@ def on_custom(data: str):
 
 
 def handle_chat_command(player: dict, message: str):
+    """
+    Parses formatted chat commands.
+    Currently only handles LuxBot commands.
+    Checks if player has valid permissions then passes data into Chat.dispatcher.
+
+    :param player: Parsed player information [username, sigil, tag, level]
+    :type player: dict
+    :param message: Raw chat message containing formatted command
+    :type message: str
+    """
     reply_string = ""
     reply_needed = False
     command = Chat.generate_command(message)
@@ -305,6 +414,7 @@ def handle_chat_command(player: dict, message: str):
 
 
 def handle_player_offline(player: str):
+    """Removes player from online_mods set"""
     if player in online_mods:
         try:
             online_mods.remove(player)
@@ -315,13 +425,25 @@ def handle_player_offline(player: str):
 
 
 def poll_online_mods():
+    """Sends ``CUSTOM`` messages formatted for the ModMod plugin to check if mods are still online."""
     try:
         send_modmod_message(command="HELLO", player="ALL", payload="0:0")
-    except:
+    except:     # Specifying exception type caused further problems. GH issue #25
         print("Online mod poll attempted while connection closed.")
 
 
 def handle_interactor(player: str, command: str, content: str, callback_id: str):
+    """
+    Simple parser that passes Interactor plugin data onto Interactor.dispatcher.
+    :param player: Player username
+    :type player: str
+    :param command: Interactor command
+    :type command: str
+    :param content: Sub commands and payload for interactor command
+    :type content: str
+    :param callback_id: IP+ framework callback ID
+    :type callback_id: str
+    """
     command_data = {
         "player": player,
         "command": command,
@@ -335,6 +457,24 @@ def handle_interactor(player: str, command: str, content: str, callback_id: str)
 
 
 def handle_modmod(player: str, command: str, content: str, callback_id: str):
+    """
+    Handles custom messages sent by the ModMod client script.
+
+    Adds account that sent the message to the online mods set.
+
+    Informs currently online mods when a mod logs in or out.
+
+    Relays messages for the in-game mod chat room.
+
+    :param player: Username of account that sent the command
+    :type player: str
+    :param command: Command type
+    :type command: str
+    :param content: Sub commands and payload
+    :type content: str
+    :param callback_id: IP+ framework callback ID
+    :type callback_id: str
+    """
     online_mods.add(player)
     if command == "HELLO":
         if content == "1:0":
@@ -359,6 +499,7 @@ def handle_modmod(player: str, command: str, content: str, callback_id: str):
 
 
 def send_modmod_message(**kwargs):
+    """Sends ``CUSTOM`` message formatted for ModMod client script."""
     payload = kwargs.get("payload", None)
     command = kwargs.get("command", None)
     player = kwargs.get("player", None)
@@ -371,6 +512,7 @@ def send_modmod_message(**kwargs):
 
 
 def log_message(message: str):
+    """Posts formatted chat messages to the DH discord server. Also to a testing server and file if in dev mode."""
     if development_mode:
         testing_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
 
@@ -381,6 +523,7 @@ def log_message(message: str):
 
 
 def start_event_countdown(event_timer: int, event_type: str):
+
     global_vars_instance.event_countdown_started = True
 
     current_time = datetime.now(timezone.utc)
