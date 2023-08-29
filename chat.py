@@ -151,11 +151,25 @@ class Chat:
         elif "messages" in message:
             required_value = "total_messages"
 
+        if "day" in message:
+            time_frame = 1
+        elif "hour" in message:
+            time_frame = 2
+        else:
+            time_frame = 0
+
         if required_value is not None:
             chat_stats = Db.read_config_row("chat_stats")
             requested_value = chat_stats[required_value]
 
-            response = f"Here's the number you wanted Lux: {requested_value}. Get it yourself next time"
+            start_date = chat_stats["start_date"]
+            start_datetime = datetime.strptime(start_date, "%d/%m/%y %H:%M")
+            delta = datetime.now() - start_datetime
+            total_time = round(delta.total_seconds())
+
+            request_per_time = Chat.per_time(total_time, requested_value)
+
+            response = f"Here's the number you wanted Lux: {request_per_time[time_frame]}. Get it yourself next time"
             Chat.send_chat_message(ws, response)
 
     @staticmethod
