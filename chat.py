@@ -176,6 +176,7 @@ class Chat:
             "bird_loot": Chat.bird_loot,
             "chat_stats": Chat.chat_stats,
             "fixed_fix": Chat.fixed_fix,
+            "pirate_loot": Chat.pirate_loot,
             "help": Chat.help,
         }
 
