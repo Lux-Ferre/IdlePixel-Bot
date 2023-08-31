@@ -206,9 +206,11 @@ def on_chat(data: str):
 
     Chat.track_chats(ws, player, message)
 
-    if player["username"] in ["lux", "luxferre", "axe", "luxchatter"]:
-        if message[0] != "!" and "luxbot" in message and "chat stat" in message:
-            Chat.get_chat_stat(ws, player, message)
+    perm = Utils.permission_level(player["username"])
+
+    if perm >= 0:
+        if message[0] != "!" and "luxbot" in message.lower() and "chat stat" in message.lower():
+            Chat.get_chat_stat(ws, player, message.lower())
 
     now = datetime.now()
     current_time = now.strftime("%H:%M")

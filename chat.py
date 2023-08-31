@@ -130,9 +130,9 @@ class Chat:
             required_value = "total_noobs"
         elif "other bot" in message:
             required_value = "botofnades_requests"
-        elif "blood diamonds" in message:
+        elif "blood diamond" in message:
             required_value = "blood_diamonds_found"
-        elif "diamonds" in message:
+        elif "diamond" in message:
             required_value = "diamonds_found"
         elif "blood gem goblin" in message:
             required_value = "blood_goblin_encounters"
@@ -175,12 +175,12 @@ class Chat:
                 case 2:
                     response_timeframe = "every hour"
                 case _:
-                    response_timeframe = ""
+                    response_timeframe = "since 09/08/2023"
 
             response_value = f"{request_per_time[time_frame]} {response_timeframe}"
 
             response_patterns = [
-                f"Here's the number you wanted Lux: {response_value}. Get it yourself next time.",
+                f"Here's the number you wanted {player['username'].capitalize()}: {response_value}. Get it yourself next time.",
                 f"Ugh. Fine. Here: {response_value}.",
                 f"You're so lazy! Here: {response_value}.",
                 f"-.- {response_value}",
