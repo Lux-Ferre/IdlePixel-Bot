@@ -208,9 +208,18 @@ def on_chat(data: str):
 
     perm = Utils.permission_level(player["username"])
 
+    dynamic_command_tiggers = ["chat stat", "gimme", "fetch", "look up", "statistic"]
+
+    trigger_found = False
+
     if perm >= 0:
-        if message[0] != "!" and "luxbot" in message.lower() and "chat stat" in message.lower():
-            Chat.get_chat_stat(ws, player, message.lower())
+        if message[0] != "!" and "luxbot" in message.lower():
+            for trigger in dynamic_command_tiggers:
+                if trigger in message.lower():
+                    trigger_found = True
+
+    if trigger_found:
+        Chat.get_chat_stat(ws, player, message.lower())
 
     now = datetime.now()
     current_time = now.strftime("%H:%M")
