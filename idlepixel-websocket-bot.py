@@ -295,6 +295,9 @@ def on_yell(message: str):
 
     yell_dict = {"type": "", "player": message.split(" ")[0]}
 
+    if "agrodon" in message.lower():
+        Chat.send_chat_message(ws, "Wizard hax!")
+
     if "found a diamond" in message:
         yell_dict["type"] = "diamond"
     elif "found a legendary blood diamond" in message:
