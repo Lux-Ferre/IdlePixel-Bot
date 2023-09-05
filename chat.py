@@ -150,6 +150,8 @@ class Chat:
             required_value = "max_levels"
         elif "messages" in message:
             required_value = "total_messages"
+        elif "playtime" in message:
+            required_value = "playtime"
 
         if "day" in message:
             time_frame = 1
@@ -160,7 +162,16 @@ class Chat:
 
         if required_value is not None:
             chat_stats = Db.read_config_row("chat_stats")
-            requested_value = chat_stats[required_value]
+
+            if required_value == "playtime":
+                diamonds = chat_stats["diamonds_found"]
+                blood_diamonds = chat_stats["blood_diamonds_found"]
+
+                est_by_diamonds = (diamonds * 1000000) / 60 / 60
+                est_by_blood_diamonds = blood_diamonds * 25000000 / 60 / 60
+                requested_value = round((est_by_blood_diamonds + est_by_diamonds) / 2)
+            else:
+                requested_value = chat_stats[required_value]
 
             start_date = chat_stats["start_date"]
             start_datetime = datetime.strptime(start_date, "%d/%m/%y %H:%M")
