@@ -580,9 +580,18 @@ def end_event(event_type: str):
     formatted_scores = f"The last event was a {event_type} event. The final scores were: \n"
 
     for rank, username in enumerate(sorted_scores):
-        formatted_scores += f"{rank + 1}: {username} - {sorted_scores[username]}\n"
+        new_line = f"{rank + 1}: {username} - {sorted_scores[username]}\n"
+        if len(formatted_scores) + len(new_line) < 2000:
+            formatted_scores += f"{rank + 1}: {username} - {sorted_scores[username]}\n"
+        else:
+            break
 
-    print(formatted_scores)
+    allowed = discord.AllowedMentions(everyone=False, users=False,
+                                      roles=[discord.Object(id="1142985685184282705", type=discord.Role)])
+
+    with requests.Session() as session:
+        event_webhook = SyncWebhook.from_url(env_consts["EVENT_HOOK_URL"], session=session)
+        event_webhook.send(content=formatted_scores, allowed_mentions=allowed)
 
 
 if __name__ == "__main__":
