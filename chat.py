@@ -222,6 +222,7 @@ class Chat:
             "fixed_fix": Chat.fixed_fix,
             "pirate_loot": Chat.pirate_loot,
             "sigil_list": Chat.sigil_list,
+            "gem_guide": Chat.gem_guide,
             "help": Chat.help,
         }
 
@@ -482,6 +483,12 @@ class Chat:
         return stat_count, count_per_day, count_per_hour
 
     @staticmethod
+    def gem_guide(ws, player: dict, command: dict):
+        reply_string = f"https://www.reddit.com/r/idlepixel/comments/xzo62l/dboys_gemming_priorities_guide/"
+        Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
+
+    @staticmethod
     def help(ws, player: dict, command: dict):
         help_strings = {
             "echo": "Repeats your message back into chat. [!luxbot:echo<message>]",
@@ -501,6 +508,7 @@ class Chat:
             "fixed_fix": "A screenshot of the fix to Kape's DHP Fixed script, generously provided by strawberry.",
             "pirate_loot": "A screenshot of the pirate cost and odds table.",
             "sigil_list": "A screenshot of Lux's sigil collection.",
+            "gem_guide": "A link with a guide for how to prioritize tool socketing upgrades.",
             "help": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
         }
 
