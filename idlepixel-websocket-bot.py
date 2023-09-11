@@ -297,6 +297,8 @@ def on_yell(message: str):
 
     if "agrodon" in message.lower():
         Chat.send_chat_message(ws, "Wizard hax!")
+    elif "i am smitty" in message.lower():
+        Chat.send_chat_message(ws, "Dev hax!")
 
     if "found a diamond" in message:
         yell_dict["type"] = "diamond"
