@@ -628,7 +628,7 @@ if __name__ == "__main__":
                                 on_close=on_ws_close)
 
     ws.run_forever(dispatcher=rel,
-                   reconnect=60,
+                   reconnect=120,
                    sslopt={"cert_reqs": ssl.CERT_NONE})  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly, no SSL cert
     rel.signal(2, rel.abort)  # Keyboard Interrupt
     rel.dispatch()
