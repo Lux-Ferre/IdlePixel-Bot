@@ -419,7 +419,7 @@ def handle_chat_command(player: dict, message: str):
                     print(msg)
                     reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command."
                     reply_needed = True
-        elif perm_level < 0:
+        elif perm_level < 1:
             pass
         else:
             reply_string = f"Sorry {player['username']}, you are not authorized to issue LuxBot commands."

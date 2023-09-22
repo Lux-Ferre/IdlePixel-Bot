@@ -20,12 +20,12 @@ class Chat:
 
     @staticmethod
     def generate_command(raw_message: str) -> dict:
-        split_message = raw_message.lower().split(" ", 1)
+        split_message = raw_message.split(" ", 1)
         full_command = split_message[0]
         split_command = full_command.split(":", 1)
-        primary_command = split_command[0]
+        primary_command = split_command[0].lower()
         if len(split_command) > 1:
-            sub_command = split_command[1]
+            sub_command = split_command[1].lower()
         else:
             sub_command = None
         if len(split_message) > 1:
@@ -277,7 +277,7 @@ class Chat:
     @staticmethod
     def wiki(ws, player: dict, command: dict):
         if command['payload'] is not None:
-            reply_string = f"Wiki page for {command['payload']}: https://idle-pixel.wiki/index.php/{command['payload'].capitalize()}"
+            reply_string = f"Wiki page for {command['payload']}: https://idle-pixel.wiki/index.php/{command['payload']}"
         else:
             reply_string = f"Wiki home page: https://idle-pixel.wiki/index.php/Main_Page"
 
@@ -496,7 +496,7 @@ class Chat:
             "dho_maps": "Replies with the solutions to the Offline treasure maps.",
             "scripts": "Replies with a link to the QoL scripts wiki page.",
             "vega": "Replies with a <random> photo of Vega. [!luxbot:vega <opt:title>]",
-            "wiki": "Replies with a link to the wiki. [!luxbot:wiki <opt:page_title>]",
+            "wiki": "Replies with a link to the wiki (links are case sensitive.) [!luxbot:wiki <opt:page_title>]",
             "bear": "Replies with a <random> photo of Bear. [!luxbot:bear <opt:title>]",
             "pet": "Replies with a random photo from the pets database. [!luxbot:pet <opt:pet_name>]",
             "pet_stats": "Replies with a pastebin link containing info about the pets database.",
