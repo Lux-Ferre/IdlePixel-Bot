@@ -264,7 +264,7 @@ class Chat:
         vega_links = Db.get_pet_links("vega")
         if command["payload"] is not None:
             try:
-                reply_string = vega_links[command["payload"]]
+                reply_string = vega_links[command["payload"].lower()]
             except KeyError:
                 reply_string = "Invalid Vega."
         else:
@@ -289,7 +289,7 @@ class Chat:
         bear_links = Db.get_pet_links("bear")
         if command['payload'] is not None:
             try:
-                reply_string = bear_links[command['payload']]
+                reply_string = bear_links[command['payload'].lower()]
             except KeyError:
                 reply_string = "Invalid Bear."
         else:
@@ -306,7 +306,7 @@ class Chat:
     def pet(ws, player: dict, command: dict):
         if command['payload'] is not None:
             query = "SELECT title, pet, link FROM pet_links WHERE pet=? ORDER BY RANDOM() LIMIT 1;"
-            params = (command['payload'],)
+            params = (command['payload'].lower(),)
         else:
             query = "SELECT title, pet, link FROM pet_links ORDER BY RANDOM() LIMIT 1;"
             params = tuple()
