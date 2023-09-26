@@ -43,7 +43,23 @@ class Chat:
 
     @staticmethod
     def send_chat_message(ws, chat_string: str):
-        chat_string = chat_string.replace("richie19942", "Bawbag")
+        replace_dict = {
+            "richie19942": "Bawbag",
+            "Richie19942": "Bawbag",
+            "ma25": "Cupcake",
+            "Ma25": "Cupcake",
+            "amyjane1991": "Zombbun",
+            "Amyjane1991": "Zombbun",
+            "Axe": "Lux",
+            "Luxferre": "Lux",
+            "luxferre": "Lux",
+            "Godofnades": "Nades",
+            "godofnades": "Nades",
+        }
+
+        for key, value in replace_dict.items():
+            chat_string = chat_string.replace(key, value)
+
         chat_string = f"CHAT={chat_string}"
         ws.send(chat_string)
 
@@ -264,12 +280,12 @@ class Chat:
         vega_links = Db.get_pet_links("vega")
         if command["payload"] is not None:
             try:
-                reply_string = vega_links[command["payload"].lower()]
+                reply_string = f"{player['username'].capitalize()}, here's the {command['payload']} Vega you requested: {vega_links[command['payload'].lower()]}"
             except KeyError:
-                reply_string = "Invalid Vega."
+                reply_string = f"Sorry {player['username'].capitalize()}, that is an invalid Vega."
         else:
             random_vega = random.choice(list(vega_links))
-            reply_string = f"Your random Vega is: {random_vega}: {vega_links[random_vega]}"
+            reply_string = f"{player['username'].capitalize()}, your random Vega is: {random_vega}: {vega_links[random_vega]}"
 
         Chat.send_chat_message(ws, reply_string)
         return False, "Success"
@@ -289,15 +305,12 @@ class Chat:
         bear_links = Db.get_pet_links("bear")
         if command['payload'] is not None:
             try:
-                reply_string = bear_links[command['payload'].lower()]
+                reply_string = f"{player['username'].capitalize()}, here's the {command['payload']} Bear you requested: {bear_links[command['payload'].lower()]}"
             except KeyError:
-                reply_string = "Invalid Bear."
+                reply_string = f"Sorry {player['username'].capitalize()}, that is an invalid Bear."
         else:
             random_bear = random.choice(list(bear_links))
-            reply_string = f"Your random Bear is: {random_bear}: {bear_links[random_bear]}"
-
-        if player['username'] == "richie19942":
-            reply_string = "Bawbag, " + reply_string
+            reply_string = f"{player['username'].capitalize()}, your random Bear is: {random_bear}: {bear_links[random_bear]}"
 
         Chat.send_chat_message(ws, reply_string)
         return False, "Success"
@@ -316,10 +329,7 @@ class Chat:
         if pet_link is None:
             reply_string = f"Sorry {player['username'].capitalize()}, that is an invalid pet name."
         else:
-            reply_string = f"Your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
-
-        if player['username'] == "richie19942":
-            reply_string = "Bawbag, " + reply_string
+            reply_string = f"{player['username'].capitalize()}, your random pet is {pet_link[1].capitalize()}! {pet_link[0].capitalize()}: {pet_link[2]}"
 
         Chat.send_chat_message(ws, reply_string)
         return False, "Success"
