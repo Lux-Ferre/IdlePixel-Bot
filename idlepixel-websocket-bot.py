@@ -262,6 +262,7 @@ def handle_automod(player: dict, message: str):
     ]
 
     automod_flag_words = flag_words_dict["word_list"].split(",")
+    automod_flag_words += [" fag", "fag "]
     message = message.lower()
     for trigger in automod_flag_words:
         if trigger in message:

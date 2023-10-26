@@ -61,7 +61,19 @@ class Chat:
             chat_string = chat_string.replace(key, value)
 
         chat_string = f"CHAT={chat_string}"
-        ws.send(chat_string)
+
+        message_clear = True
+
+        flag_words_dict = Db.read_config_row("automod_flag_words")
+        automod_flag_words = flag_words_dict["word_list"].split(",")
+        automod_flag_words += [" fag", "fag "]
+        message = chat_string.lower()
+        for trigger in automod_flag_words:
+            if trigger in message:
+                message_clear = False
+                break
+        if message_clear:
+            ws.send(chat_string)
 
     @staticmethod
     def track_chats(ws, player: dict, message: str):
@@ -98,6 +110,13 @@ class Chat:
                     current_stats["amy_sucks"] += 1
 
         if message[0] == "!":
+            if message[:7] == "!hevent":
+                current_stats["hevent"] += 1
+            elif message[:6] == "!zombo":
+                current_stats["zombo"] += 1
+                if current_stats["zombo"] % 100 == 0:
+                    Chat.send_chat_message(ws, f"{player['username'].capitalize()} just made request number {current_stats['zombo']} to the !zombo command! (Since I started tracking)")
+
             if message[:7] == "!luxbot":
                 current_stats["luxbot_requests"] += 1
             else:
@@ -168,6 +187,10 @@ class Chat:
             required_value = "total_messages"
         elif "playtime" in message:
             required_value = "playtime"
+        elif "hevent" in message:
+            required_value = "hevent"
+        elif "zombo" in message:
+            required_value = "zombo"
 
         if "day" in message:
             time_frame = 1
@@ -189,7 +212,13 @@ class Chat:
             else:
                 requested_value = chat_stats[required_value]
 
-            start_date = chat_stats["start_date"]
+            if required_value == "hevent":
+                start_date = "23/10/23 17:00"
+            elif required_value == "zombo":
+                start_date = "25/10/23 11:00"
+            else:
+                start_date = chat_stats["start_date"]
+
             start_datetime = datetime.strptime(start_date, "%d/%m/%y %H:%M")
             delta = datetime.now() - start_datetime
             total_time = round(delta.total_seconds())
@@ -202,7 +231,12 @@ class Chat:
                 case 2:
                     response_timeframe = "every hour"
                 case _:
-                    response_timeframe = "since 09/08/2023"
+                    if required_value == "hevent":
+                        response_timeframe = "since 17:00 23/10/2023 BST"
+                    elif required_value == "zombo":
+                        response_timeframe = "since 11:00 25/10/2023 BST"
+                    else:
+                        response_timeframe = "since 09/08/2023"
 
             response_value = f"{request_per_time[time_frame]} {response_timeframe}"
 
