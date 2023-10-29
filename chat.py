@@ -147,6 +147,8 @@ class Chat:
                 current_stats["max_levels"] += 1
             case "elite_achievement":
                 current_stats["elite_achievements"] += 1
+            case "gold_armour":
+                current_stats["gold_armour"] += 1
             case _:
                 pass
 

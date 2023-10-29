@@ -317,6 +317,8 @@ def on_yell(message: str):
         yell_dict["type"] = "max_level"
     elif "has completed the elite" in message:
         yell_dict["type"] = "elite_achievement"
+    elif "gold armour" in message:
+        yell_dict["type"] = "gold_armour"
     else:
         yell_dict["type"] = "unknown"
 
