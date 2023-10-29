@@ -79,6 +79,10 @@ class Interactor:
                 "permission": 3,
                 "command": Interactor.whois
             },
+            "newstat": {
+                "permission": 3,
+                "command": Interactor.new_stat
+            },
             "generic": {
                 "permission": 3,
                 "command": Interactor.generic
@@ -204,6 +208,21 @@ class Interactor:
             Utils.send_custom_message(ws, player, "Invalid syntax. Specify a target.")
         else:
             Chat.send_chat_message(ws, f"/whois {content}")
+
+    @staticmethod
+    def new_stat(ws, command: dict):
+        player = command["player"]
+        content = command["content"]
+
+        current_stats = Db.read_config_row("chat_stats")
+        if content in current_stats:
+            response_string = f"The value {content} already exists!"
+        else:
+            current_stats[content] = 0
+            Db.set_config_row("chat_stats", current_stats)
+            response_string = f"{content} is now added to the tracking database."
+
+        Utils.send_custom_message(ws, player, response_string)
 
     @staticmethod
     def generic(ws, command: dict):
