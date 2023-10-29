@@ -48,13 +48,15 @@ class Chat:
             "Richie19942": "Bawbag",
             "ma25": "Cupcake",
             "Ma25": "Cupcake",
-            "amyjane1991": "Zombbun",
-            "Amyjane1991": "Zombbun",
+            "amyjane1991": "Noobbun",
+            "Amyjane1991": "Noobbun",
             "Axe": "Lux",
             "Luxferre": "Lux",
             "luxferre": "Lux",
             "Godofnades": "Nades",
             "godofnades": "Nades",
+            "zlef": "Zlefy",
+            "Zlef": "Zlefy",
         }
 
         for key, value in replace_dict.items():
