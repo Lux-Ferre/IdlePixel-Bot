@@ -57,6 +57,8 @@ class Chat:
             "godofnades": "Nades",
             "zlef": "Zlefy",
             "Zlef": "Zlefy",
+            "cammyrock": "Clammy Rock",
+            "Cammyrock": "Clammy Rock",
         }
 
         for key, value in replace_dict.items():
@@ -110,6 +112,9 @@ class Chat:
 
                 if "suck" in message:
                     current_stats["amy_sucks"] += 1
+
+        if message[:5] == "?wiki":      # 30/10/23 14:00
+            current_stats["wikibot"] += 1
 
         if message[0] == "!":
             if message[:7] == "!hevent":
@@ -454,14 +459,18 @@ class Chat:
         blood_goblins = Chat.per_time(total_time, chat_stats["blood_goblin_encounters"])
         elites = Chat.per_time(total_time, chat_stats["elite_achievements"])
         skills = Chat.per_time(total_time, chat_stats["max_levels"])
+        golds = Chat.per_time(total_time, chat_stats["gold_armour"])
+        wikibot = Chat.per_time(total_time, chat_stats["wikibot"])
 
         output_string = f'''
         Since {start_date} there have been:
         {chats[0]} chat messages sent!
         {nades[0]} BotofNades commands sent!
         {luxbot[0]} LuxBot commands sent!
+        {wikibot[0]} WikiSearch bot requests made!
         {yells[0]} server messages sent!
         Those include:
+        	- {golds[0]} gold armour pieces found!
         	- {diamonds[0]} diamonds found!
         	- {blood_diamonds[0]} blood diamonds found!
         	- {sigils[0]} monster sigils found!

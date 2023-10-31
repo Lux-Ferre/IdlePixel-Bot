@@ -82,14 +82,14 @@ class Db:
             Db.set_db(query, pet_data)
         except sqlite3.IntegrityError as e:
             print(e)
-            Utils.send_custom_message(ws, player, f"Link not added, '{pet_data[0]}' already exists.")
+            Utils.send_custom_message(ws, player, f"LuxBot:add_pet:Link not added, '{pet_data[0]}' already exists.")
 
     @staticmethod
     def update_permission(ws, player: str, updated_player: str, level: str):
         level = int(level)
 
         if not -1 <= level <= 3:
-            Utils.send_custom_message(ws, player, "Invalid permission level. Must be between -1 and 3.")
+            Utils.send_custom_message(ws, player, "LuxBot:update_permission:Invalid permission level. Must be between -1 and 3.")
             return
 
         query = """
@@ -99,7 +99,7 @@ class Db:
         params = (updated_player, level)
         Db.set_db(query, params)
 
-        Utils.send_custom_message(ws, player, f"{updated_player} permission level set to {level}.")
+        Utils.send_custom_message(ws, player, f"LuxBot:update_permission:{updated_player} permission level set to {level}.")
 
 
 class Utils:

@@ -94,12 +94,12 @@ class Interactor:
 
         if command["command"] in dispatch:
             if Utils.permission_level(command["player"]) < dispatch[command["command"]]["permission"]:
-                return "Permission level too low."
+                return "Interactor:Response:Permission level too low."
         else:
-            return "Invalid command."
+            return "Interactor:Response:Invalid command."
 
         dispatch[command["command"]]["command"](ws, command)
-        return f"Command '{command['command']}' issued successfully."
+        return f"Interactor:Response:Command '{command['command']}' issued successfully."
 
     @staticmethod
     def echo(ws, command: dict):
@@ -134,12 +134,12 @@ class Interactor:
             trigger_list.append(payload.strip())
             trigger_dict = {"word_list": ",".join(trigger_list)}
             Db.set_config_row("automod_flag_words", trigger_dict)
-            Utils.send_custom_message(ws, player, f"{payload} has been added to automod triggers.")
+            Utils.send_custom_message(ws, player, f"Interactor:Response:{payload} has been added to automod triggers.")
         elif subcommand == "remove":
             trigger_list.remove(payload.strip())
             trigger_dict = {"word_list": ",".join(trigger_list)}
             Db.set_config_row("automod_flag_words", trigger_dict)
-            Utils.send_custom_message(ws, player, f"{payload} has been removed from the automod triggers.")
+            Utils.send_custom_message(ws, player, f"Interactor:Response:{payload} has been removed from the automod triggers.")
 
     @staticmethod
     def speak(ws, command: dict):
@@ -152,7 +152,7 @@ class Interactor:
         content = command["content"]
         split_sub_command = content.split(";")
         if len(split_sub_command) != 4:
-            Utils.send_custom_message(ws, player, f"Invalid syntax. (pets:add;pet;title;link)")
+            Utils.send_custom_message(ws, player, f"Interactor:Response:Invalid syntax. (pets:add;pet;title;link)")
         else:
             subcommand = split_sub_command[0]
             pet = split_sub_command[1]
@@ -163,9 +163,9 @@ class Interactor:
 
             if subcommand == "add":
                 Db.add_pet(ws, pet_data, player)
-                Utils.send_custom_message(ws, player, f"{pet} link added with title: {title}")
+                Utils.send_custom_message(ws, player, f"Interactor:Response:{pet} link added with title: {title}")
             elif subcommand == "remove":
-                Utils.send_custom_message(ws, player, f"Remove feature not added.")
+                Utils.send_custom_message(ws, player, f"Interactor:Response:Remove feature not added.")
 
     @staticmethod
     def permissions(ws, command: dict):
@@ -237,23 +237,23 @@ class Interactor:
         content = command["content"]
         interactor_commands = Interactor.dispatcher(ws, True, {})
         if content is None:
-            help_string = "Command List"
+            help_string = "Interactor:help_list:"
             for com in interactor_commands:
                 help_string += f" | {com}"
             Utils.send_custom_message(ws, player, help_string)
-            Utils.send_custom_message(ws, player, "help:command will give a brief description of the command.")
+            Utils.send_custom_message(ws, player, "Interactor:Help:help:<command> will give a brief description of the command.")
         else:
             help_string = Interactor.get_help_string(content)
             Utils.send_custom_message(ws, player, help_string)
 
         if content == "triggers":
             trigger_list = Db.read_config_row("automod_flag_words")
-            Utils.send_custom_message(ws, player, f"Current triggers: {trigger_list}")
+            Utils.send_custom_message(ws, player, f"Interactor:trigger_list:{trigger_list}")
         elif content == "permissions":
             query = f"SELECT * FROM permissions"
             params = tuple()
             perms_list = Db.fetch_db(query, params, True)
-            perms_string = f"Current permissions: {perms_list}"
-            wrapped_message = textwrap.wrap(perms_string, 240)
+            perms_string = f"{perms_list}"
+            wrapped_message = textwrap.wrap(perms_string, 230)
             for message in wrapped_message:
-                Utils.send_custom_message(ws, player, message)
+                Utils.send_custom_message(ws, player, f"Interactor:perm_list:{message}")

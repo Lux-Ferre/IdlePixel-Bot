@@ -347,7 +347,7 @@ def on_dialogue(data: str):
         level_three_accounts = [x[0] for x in account_list]
 
         for account in level_three_accounts:
-            Utils.send_custom_message(ws, account, "WHOIS:" + str(whois_list))
+            Utils.send_custom_message(ws, account, "LuxBot:WHOIS:" + str(whois_list))
     else:
         print(data)
 
