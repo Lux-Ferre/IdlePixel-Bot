@@ -282,6 +282,7 @@ class Chat:
             "pirate_loot": Chat.pirate_loot,
             "sigil_list": Chat.sigil_list,
             "gem_guide": Chat.gem_guide,
+            "cammy": Chat.cammyrock,
             "help": Chat.help,
         }
 
@@ -546,6 +547,12 @@ class Chat:
         return False, "Success"
 
     @staticmethod
+    def cammyrock(ws, player: dict, command: dict):
+        reply_string = f"{player['username'].capitalize()}, here is a photo of Clammy Rock at a party: https://prnt.sc/CibZHdTWns3G"
+        Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
+
+    @staticmethod
     def help(ws, player: dict, command: dict):
         help_strings = {
             "echo": "Repeats your message back into chat. [!luxbot:echo<message>]",
@@ -566,6 +573,7 @@ class Chat:
             "pirate_loot": "A screenshot of the pirate cost and odds table.",
             "sigil_list": "A screenshot of Lux's sigil collection.",
             "gem_guide": "A link with a guide for how to prioritize tool socketing upgrades.",
+            "cammy": "Replies with an image of Cammy.",
             "help": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
         }
 
