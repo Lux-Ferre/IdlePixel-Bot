@@ -206,13 +206,13 @@ def on_chat(data: str):
 
     Chat.track_chats(ws, player, message)
 
-    perm = Utils.permission_level(player["username"])
+    player["perm"] = Utils.permission_level(player["username"])
 
     dynamic_command_tiggers = ["chat stat", "gimme", "fetch", "look up", "statistic"]
 
     trigger_found = False
 
-    if perm >= 0:
+    if player["perm"] >= 0:
         if message[0] != "!" and "luxbot" in message.lower():
             for trigger in dynamic_command_tiggers:
                 if trigger in message.lower():
@@ -419,8 +419,7 @@ def handle_chat_command(player: dict, message: str):
     command = Chat.generate_command(message)
 
     if command["command"] == "!luxbot":
-        perm_level = Utils.permission_level(player['username'])
-        if perm_level >= 1:
+        if player["perm"] >= 1:
             if command["sub_command"] is None:
                 reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command format."
                 reply_needed = True
@@ -430,7 +429,7 @@ def handle_chat_command(player: dict, message: str):
                     print(msg)
                     reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command."
                     reply_needed = True
-        elif perm_level < 1:
+        elif player["perm"] < 1:
             pass
         else:
             reply_string = f"Sorry {player['username']}, you are not authorized to issue LuxBot commands."
