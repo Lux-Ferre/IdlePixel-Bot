@@ -233,7 +233,7 @@ def on_chat(data: str):
     elif message[0] == "!":
         handle_chat_command(player=player, message=message)
         if development_mode:
-            print(f'Chat command received: {message}')
+            print(f'Chat command received from {player["username"]}: {message}')
     elif len(message) > 4 and message[:5] == "@mods":
         note = message[5:]
         mod_call = f"{player['username']} is calling for a mod with note: {note}"
@@ -266,6 +266,12 @@ def handle_automod(player: dict, message: str):
     message = message.lower()
     for trigger in automod_flag_words:
         if trigger in message:
+            bot_list = {"botofnades": "BotofNades", "wikisearch": "WikiSearch"}
+            if player["username"] in bot_list:
+                reply_string = f"Silly {bot_list[player['username']]}, you shouldn't copy the fleshbags' bad words. I forgive you though."
+                Chat.send_chat_message(ws, reply_string)
+                return
+
             message_string = f"**{player['username']} has been muted for using the word: {trigger}**"
             send_modmod_message(payload=message_string, command="MSG", player="ALL")
             length = "24"

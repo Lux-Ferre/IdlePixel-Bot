@@ -91,6 +91,7 @@ class Chat:
             "skyedemon",
             "iloveamy",
             "demonlilly",
+            "youarenoob",
         ]
 
         current_stats = Db.read_config_row("chat_stats")
