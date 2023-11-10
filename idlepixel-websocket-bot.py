@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import os
 import random
 import discord
@@ -13,6 +14,7 @@ import rel
 import ssl
 import traceback
 from dataclasses import dataclass
+from collections import deque
 
 from utils import RepeatTimer, Db, Utils
 from chat import Chat
@@ -203,6 +205,8 @@ def on_chat(data: str):
     player, message = Chat.splitter(data)
 
     handle_automod(player, message)
+
+    global_vars_instance.chat_history.append(data)
 
     Chat.track_chats(ws, player, message)
 
@@ -533,15 +537,9 @@ def handle_chathist(player: str, command: str, content: str, callback_id: str):
     if perm_level < 0:
         return
 
-    testdata = [
-                "player1~fire_hawk_sigil_chat~none~323~message1",
-                "player2~fire_hawk_sigil_chat~none~323~message2",
-                "player3~fire_hawk_sigil_chat~none~323~message3",
-                "player4~fire_hawk_sigil_chat~none~323~message4",
-                "player5~fire_hawk_sigil_chat~none~323~message5"
-            ]
+    chat_history = global_vars_instance.chat_history
 
-    for message in testdata:
+    for message in chat_history:
         Utils.send_custom_message(ws, player, f"chathist:addMessage:{message}")
 
     Utils.send_custom_message(ws, player, "chathist:endstream:none")
@@ -636,6 +634,7 @@ if __name__ == "__main__":
     class GlobalizedVars:
         """Class to store pseudo-global variables"""
         item_data: dict
+        chat_history: collections.deque[str]
         last_event_type: str = ""
         last_event_ending_declaration: str = ""
         parsed_event_score = dict = {}
@@ -644,7 +643,7 @@ if __name__ == "__main__":
         event_countdown_started: bool = False
         raw_event_scores: str = ""
 
-    global_vars_instance = GlobalizedVars(item_data={})
+    global_vars_instance = GlobalizedVars(item_data={}, chat_history=deque([], 5))
 
     dh_webhook = SyncWebhook.from_url(env_consts["DH_DISCORD_HOOK_URL"])
     if development_mode:
