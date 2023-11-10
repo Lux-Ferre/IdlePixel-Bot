@@ -401,6 +401,8 @@ def on_custom(data: str):
         handle_interactor(player, command, content, callback_id)
     elif plugin == "MODMOD":
         handle_modmod(player, command, content, callback_id)
+    elif plugin == "chathist":
+        handle_chathist(player, command, content, callback_id)
 
 
 def handle_chat_command(player: dict, message: str):
@@ -522,6 +524,27 @@ def handle_modmod(player: str, command: str, content: str, callback_id: str):
                 capital_mod += f"{word.capitalize()} "
             mod_string += f" | {capital_mod}"
         send_modmod_message(payload=mod_string, command="MSG", player=player)
+
+
+def handle_chathist(player: str, command: str, content: str, callback_id: str):
+    if command != "logon":
+        return
+    perm_level = Utils.permission_level(player)
+    if perm_level < 0:
+        return
+
+    testdata = [
+                "player1~fire_hawk_sigil_chat~none~323~message1",
+                "player2~fire_hawk_sigil_chat~none~323~message2",
+                "player3~fire_hawk_sigil_chat~none~323~message3",
+                "player4~fire_hawk_sigil_chat~none~323~message4",
+                "player5~fire_hawk_sigil_chat~none~323~message5"
+            ]
+
+    for message in testdata:
+        Utils.send_custom_message(ws, player, f"chathist:addMessage:{message}")
+
+    Utils.send_custom_message(ws, player, "chathist:endstream:none")
 
 
 def send_modmod_message(**kwargs):
