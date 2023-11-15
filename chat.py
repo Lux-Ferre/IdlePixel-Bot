@@ -348,10 +348,12 @@ class Chat:
         }
 
         request = command["sub_command"]
-        dispatched_command = dispatch_map.get(request, None)["command"]
+        requested_command_data = dispatch_map.get(request, None)
 
-        if dispatched_command is None:
+        if requested_command_data is None:
             return True, "Invalid LuxBot command issued."
+
+        dispatched_command = requested_command_data["command"]
 
         errored, msg = dispatched_command(ws, player, command)
 
