@@ -204,13 +204,13 @@ def on_chat(data: str):
 
     player, message = Chat.splitter(data)
 
-    handle_automod(player, message)
+    modmod_response = handle_automod(player, message)
+
+    player["perm"] = Utils.permission_level(player["username"])
 
     global_vars_instance.chat_history.append(data)
 
     Chat.track_chats(ws, player, message)
-
-    player["perm"] = Utils.permission_level(player["username"])
 
     dynamic_command_tiggers = ["chat stat", "gimme", "fetch", "look up", "statistic"]
 
@@ -230,7 +230,10 @@ def on_chat(data: str):
 
     formatted_chat = f'*[{current_time}]* **{player["username"]}:** {message} '
 
-    log_message(formatted_chat)
+    if modmod_response["contains_slur"]:
+        print(f"Slur detected, full message: {message}")
+    else:
+        log_message(formatted_chat)
 
     if len(message) == 0:
         pass
@@ -274,7 +277,10 @@ def handle_automod(player: dict, message: str):
             if player["username"] in bot_list:
                 reply_string = f"Silly {bot_list[player['username']]}, you shouldn't copy the fleshbags' bad words. I forgive you though."
                 Chat.send_chat_message(ws, reply_string)
-                return
+                return {
+                    "contains_slur": True,
+                    "is_bot_message": True
+                        }
 
             message_string = f"**{player['username']} has been muted for using the word: {trigger}**"
             send_modmod_message(payload=message_string, command="MSG", player="ALL")
@@ -283,7 +289,7 @@ def handle_automod(player: dict, message: str):
             is_ip = "false"
             Utils.mute_player(ws, player['username'], length, reason, is_ip)
             Chat.send_chat_message(ws, random.choice(automod_replies))
-            return
+            return {"contains_slur": True}
 
 
 def on_yell(message: str):
@@ -433,7 +439,7 @@ def handle_chat_command(player: dict, message: str):
                 errored, msg = Chat.dispatcher(ws, player, command)
                 if errored:
                     print(msg)
-                    reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command."
+                    reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command, or you do not have high enough permissions."
                     reply_needed = True
         elif player["perm"] < 1:
             pass
