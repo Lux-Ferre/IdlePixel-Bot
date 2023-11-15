@@ -264,30 +264,91 @@ class Chat:
 
     @staticmethod
     def dispatcher(ws, player: dict, command: dict):
-        dispatch = {
-            "echo": Chat.echo,
-            "combat": Chat.combat,
-            "dho_maps": Chat.dho_maps,
-            "scripts": Chat.scripts,
-            "vega": Chat.vega,
-            "wiki": Chat.wiki,
-            "bear": Chat.bear,
-            "pet": Chat.pet,
-            "pet_stats": Chat.pet_stats,
-            "amy_noobs": Chat.amy_noobs,
-            "quote": Chat.quote,
-            "import": Chat.import_command,
-            "bird_loot": Chat.bird_loot,
-            "chat_stats": Chat.chat_stats,
-            "fixed_fix": Chat.fixed_fix,
-            "pirate_loot": Chat.pirate_loot,
-            "sigil_list": Chat.sigil_list,
-            "gem_guide": Chat.gem_guide,
-            "cammy": Chat.cammyrock,
-            "help": Chat.help,
+        dispatch_map = {
+            "echo": {
+                "command": Chat.echo,
+                "permission": 2,
+                "help_string": "Repeats your message back into chat. [!luxbot:echo<message>]"
+            },
+            "dho_maps": {
+                "command": Chat.dho_maps,
+                "permission": 1,
+                "help_string": "Replies with the solutions to the Offline treasure maps."
+            },
+            "vega": {
+                "command": Chat.vega,
+                "permission": 1,
+                "help_string": "Replies with a <random> photo of Vega. [!luxbot:vega <opt:title>]",
+            },
+            "wiki": {
+                "command": Chat.wiki,
+                "permission": 1,
+                "help_string": "Replies with a link to the wiki (links are case sensitive.) [!luxbot:wiki <opt:page_title>]",
+            },
+            "bear": {
+                "command": Chat.bear,
+                "permission": 1,
+                "help_string": "Replies with a <random> photo of Bear. [!luxbot:bear <opt:title>]",
+            },
+            "pet": {
+                "command": Chat.pet,
+                "permission": 1,
+                "help_string": "Replies with a random photo from the pets database. [!luxbot:pet <opt:pet_name>]",
+            },
+            "pet_stats": {
+                "command": Chat.pet_stats,
+                "permission": 1,
+                "help_string": "Replies with a pastebin link containing info about the pets database.",
+            },
+            "amy_noobs": {
+                "command": Chat.amy_noobs,
+                "permission": 1,
+                "help_string": "Tells you the frequency with which Amy says the word 'noob'.",
+            },
+            "quote": {
+                "command": Chat.quote,
+                "permission": 1,
+                "help_string": "Replies with a random stored quote. (Only one placeholder quote atm.)",
+            },
+            "import": {
+                "command": Chat.import_command,
+                "permission": 1,
+                "help_string": "Easteregg. [!luxbot:import <REDACTED>]",
+            },
+            "chat_stats": {
+                "command": Chat.chat_stats,
+                "permission": 1,
+                "help_string": "Replies with a pastebin link containing various chat statistics.",
+            },
+            "pirate_loot": {
+                "command": Chat.pirate_loot,
+                "permission": 1,
+                "help_string": "A screenshot of the pirate cost and odds table.",
+            },
+            "sigil_list": {
+                "command": Chat.sigil_list,
+                "permission": 1,
+                "help_string": "A screenshot of Lux's sigil collection.",
+            },
+            "gem_guide": {
+                "command": Chat.gem_guide,
+                "permission": 1,
+                "help_string": "A link with a guide for how to prioritize tool socketing upgrades.",
+            },
+            "cammy": {
+                "command": Chat.cammyrock,
+                "permission": 1,
+                "help_string": "Replies with an image of Cammy.",
+            },
+            "help": {
+                "command": Chat.help,
+                "permission": 1,
+                "help_string": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
+            },
         }
 
-        dispatched_command = dispatch.get(command["sub_command"], None)
+        request = command["sub_command"]
+        dispatched_command = dispatch_map.get(request, None)["command"]
 
         if dispatched_command is None:
             return True, "Invalid LuxBot command issued."
