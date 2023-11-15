@@ -356,7 +356,10 @@ class Chat:
         if requested_command_data is None:
             return True, "Invalid LuxBot command issued."
 
-        dispatched_command = requested_command_data["command"]
+        if player["perm"] >= requested_command_data["permission"]:
+            dispatched_command = requested_command_data["command"]
+        else:
+            return True, f"{player['username']} permission level too low to use {command['sub_command']}."
 
         errored, msg = dispatched_command(ws, player, command)
 
