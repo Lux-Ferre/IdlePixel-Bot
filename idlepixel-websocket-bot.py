@@ -204,7 +204,7 @@ def on_chat(data: str):
 
     player, message = Chat.splitter(data)
 
-    modmod_response = handle_automod(player, message)
+    automod_response = handle_automod(player, message)
 
     player["perm"] = Utils.permission_level(player["username"])
 
@@ -230,7 +230,7 @@ def on_chat(data: str):
 
     formatted_chat = f'*[{current_time}]* **{player["username"]}:** {message} '
 
-    if modmod_response["contains_slur"]:
+    if automod_response["contains_slur"]:
         print(f"Slur detected, full message: {message}")
     else:
         log_message(formatted_chat)
@@ -285,7 +285,7 @@ def handle_automod(player: dict, message: str):
             message_string = f"**{player['username']} has been muted for using the word: {trigger}**"
             send_modmod_message(payload=message_string, command="MSG", player="ALL")
             length = "24"
-            reason = f"Using the word: {trigger}"
+            reason = f'Using the word: {trigger}: "{message}"'
             is_ip = "false"
             Utils.mute_player(ws, player['username'], length, reason, is_ip)
             Chat.send_chat_message(ws, random.choice(automod_replies))
