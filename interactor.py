@@ -7,98 +7,92 @@ from utils import Utils, Db
 class Interactor:
     @staticmethod
     def get_help_string(command: str) -> str:
-        if command == "echo":
-            help_string = "Echos message as custom. (echo:message)"
-        elif command == "chatecho":
-            help_string = "Echos message into chat. (chatecho:message)"
-        elif command == "relay":
-            help_string = "Passes on message to another account. (relay:account:message)"
-        elif command == "togglenadebotreply":
-            help_string = "Toggles bot responses to Nadess bot commands."
-        elif command == "nadesreply":
-            help_string = "Sets a new reply string for Nadess bot commands. (nadesreply:reply_string)"
-        elif command == "triggers":
-            help_string = f"Add/remove automod triggers. (triggers:add/remove;trigger)"
-        elif command == "speak":
-            help_string = "Relays text to chat as the bot. (speak:content)"
-        elif command == "mute":
-            help_string = "Mutes target player. (mute:player;reason;length;is_ip)"
-        elif command == "pets":
-            help_string = "Interacts with the pets database. (pets:add/remove;pet;title;link)"
-        elif command == "permissions":
-            help_string = "Modifies player permissions. (permissions:player:level)"
-        elif command == "help":
-            help_string = "Lists commands or gives a description of a command. (help:command)"
-        elif command == "generic":
-            help_string = "Relays content as a websocket frame."
-        else:
-            help_string = "Invalid help command. Should be of format (help:command)"
+        dispatch_map = Interactor.dispatcher("", True, {})
+        error_reply = {
+            "help_string": "Invalid help command. Should be of format (help:command)"
+        }
+
+        requested_command = dispatch_map.get(command, error_reply)
+
+        help_string = requested_command["help_string"]
 
         return help_string
 
     @staticmethod
     def dispatcher(ws, getter: bool, command: dict):
-        dispatch = {
+        dispatch_map = {
             "echo": {
                 "permission": 2,
-                "command": Interactor.echo
+                "command": Interactor.echo,
+                "help_string": "Echos message as custom. (echo:message)"
             },
             "chatecho": {
                 "permission": 2,
-                "command": Interactor.chatecho
+                "command": Interactor.chatecho,
+                "help_string": "Echos message into chat. (chatecho:message)"
             },
             "relay": {
                 "permission": 2,
-                "command": Interactor.relay
+                "command": Interactor.relay,
+                "help_string": "Passes on message to another account. (relay:account:message)"
             },
             "triggers": {
                 "permission": 2,
-                "command": Interactor.triggers
+                "command": Interactor.triggers,
+                "help_string": "Add/remove automod triggers. (triggers:add/remove;trigger)"
             },
             "speak": {
                 "permission": 2,
-                "command": Interactor.speak
+                "command": Interactor.speak,
+                "help_string": "Relays text to chat as the bot. (speak:content)"
             },
             "pets": {
                 "permission": 2,
-                "command": Interactor.pets
+                "command": Interactor.pets,
+                "help_string": "Interacts with the pets database. (pets:add/remove;pet;title;link)"
             },
             "help": {
                 "permission": 2,
-                "command": Interactor.help
+                "command": Interactor.help,
+                "help_string": "Lists commands or gives a description of a command. (help:command)"
             },
             "permissions": {
                 "permission": 3,
-                "command": Interactor.permissions
+                "command": Interactor.permissions,
+                "help_string": "Modifies player permissions. (permissions:player:level)"
             },
             "mute": {
                 "permission": 3,
-                "command": Interactor.mute
+                "command": Interactor.mute,
+                "help_string": "Mutes target player. (mute:player;reason;length;is_ip)"
             },
             "whois": {
                 "permission": 3,
-                "command": Interactor.whois
+                "command": Interactor.whois,
+                "help_string": "Runs a whois check on <player>, sending the result to all level 3 accounts. (whois:<player>)"
             },
             "newstat": {
                 "permission": 3,
-                "command": Interactor.new_stat
+                "command": Interactor.new_stat,
+                "help_string": "Adds a new datapoint to the chat_stats stored in the database. (newstat:<datapoint_name>)"
             },
             "generic": {
                 "permission": 3,
-                "command": Interactor.generic
+                "command": Interactor.generic,
+                "help_string": "Relays content as a websocket frame."
             },
         }
 
         if getter:
-            return dispatch
+            return dispatch_map
 
-        if command["command"] in dispatch:
-            if Utils.permission_level(command["player"]) < dispatch[command["command"]]["permission"]:
+        if command["command"] in dispatch_map:
+            if Utils.permission_level(command["player"]) < dispatch_map[command["command"]]["permission"]:
                 return "Interactor:Response:Permission level too low."
         else:
             return "Interactor:Response:Invalid command."
 
-        dispatch[command["command"]]["command"](ws, command)
+        dispatch_map[command["command"]]["command"](ws, command)
         return f"Interactor:Response:Command '{command['command']}' issued successfully."
 
     @staticmethod
