@@ -1,4 +1,6 @@
 import textwrap
+import requests
+import json
 
 from chat import Chat
 from utils import Utils, Db
@@ -50,6 +52,11 @@ class Interactor:
                 "permission": 2,
                 "command": Interactor.pets,
                 "help_string": "Interacts with the pets database. (pets:add/remove;pet;title;link)"
+            },
+            "update_cheaters": {
+                "permission": 2,
+                "command": Interactor.update_cheaters,
+                "help_string": "Updates cheater permission levels from Nades's list."
             },
             "help": {
                 "permission": 2,
@@ -162,6 +169,23 @@ class Interactor:
                 Utils.send_custom_message(ws, player, f"Interactor:Response:Remove feature not added.")
 
     @staticmethod
+    def update_cheaters(ws, command: dict):
+        player = command["player"]
+
+        url = 'https://raw.githubusercontent.com/GodofNades/idle-pixel/main/AltTraders.json'
+        resp = requests.get(url)
+        data = json.loads(resp.text)
+
+        cheater_list = []
+        for data_point in data:
+            cheater_list.append(data_point["name"])
+
+        for cheater in cheater_list:
+            Db.update_permission(ws, player, cheater, "-2")
+
+        Utils.send_custom_message(ws, player, f"LuxBot:update_cheaters:All cheaters now given level -2 permissions.")
+
+    @staticmethod
     def permissions(ws, command: dict):
         player = command["player"]
         content = command["content"]
@@ -170,6 +194,7 @@ class Interactor:
             updated_player = split_command[0]
             level = split_command[1]
             Db.update_permission(ws, player, updated_player, level)
+            Utils.send_custom_message(ws, player, f"LuxBot:update_permission:{updated_player} permission level set to {level}.")
         else:
             Utils.send_custom_message(ws, player, "Invalid syntax. Must be of form 'permissions:player;level'")
 

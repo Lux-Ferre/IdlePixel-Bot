@@ -88,8 +88,8 @@ class Db:
     def update_permission(ws, player: str, updated_player: str, level: str):
         level = int(level)
 
-        if not -1 <= level <= 3:
-            Utils.send_custom_message(ws, player, "LuxBot:update_permission:Invalid permission level. Must be between -1 and 3.")
+        if not -2 <= level <= 3:
+            Utils.send_custom_message(ws, player, "LuxBot:update_permission:Invalid permission level. Must be between -2 and 3.")
             return
 
         query = """
@@ -99,7 +99,7 @@ class Db:
         params = (updated_player, level)
         Db.set_db(query, params)
 
-        Utils.send_custom_message(ws, player, f"LuxBot:update_permission:{updated_player} permission level set to {level}.")
+        #   Utils.send_custom_message(ws, player, f"LuxBot:update_permission:{updated_player} permission level set to {level}.")
 
 
 class Utils:
