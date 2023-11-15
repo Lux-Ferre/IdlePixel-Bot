@@ -263,7 +263,7 @@ class Chat:
             Chat.send_chat_message(ws, response)
 
     @staticmethod
-    def dispatcher(ws, player: dict, command: dict):
+    def dispatcher(ws, player: dict, command: dict, getter: bool = False):
         dispatch_map = {
             "echo": {
                 "command": Chat.echo,
@@ -346,6 +346,9 @@ class Chat:
                 "help_string": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
             },
         }
+
+        if getter:
+            return dispatch_map
 
         request = command["sub_command"]
         requested_command_data = dispatch_map.get(request, None)
@@ -618,45 +621,26 @@ class Chat:
 
     @staticmethod
     def help(ws, player: dict, command: dict):
-        help_strings = {
-            "echo": "Repeats your message back into chat. [!luxbot:echo<message>]",
-            "combat": "Replies with a link to the combat guide on the wiki.",
-            "dho_maps": "Replies with the solutions to the Offline treasure maps.",
-            "scripts": "Replies with a link to the QoL scripts wiki page.",
-            "vega": "Replies with a <random> photo of Vega. [!luxbot:vega <opt:title>]",
-            "wiki": "Replies with a link to the wiki (links are case sensitive.) [!luxbot:wiki <opt:page_title>]",
-            "bear": "Replies with a <random> photo of Bear. [!luxbot:bear <opt:title>]",
-            "pet": "Replies with a random photo from the pets database. [!luxbot:pet <opt:pet_name>]",
-            "pet_stats": "Replies with a pastebin link containing info about the pets database.",
-            "amy_noobs": "Tells you the frequency with which Amy says the word 'noob'.",
-            "quote": "Replies with a random stored quote. (Only one placeholder quote atm.)",
-            "import": "Easteregg. [!luxbot:import <REDACTED>]",
-            "bird_loot": "Replies with a screenshot of the birdhouse loot list.",
-            "chat_stats": "Replies with a pastebin link containing various chat statistics.",
-            "fixed_fix": "A screenshot of the fix to Kape's DHP Fixed script, generously provided by strawberry.",
-            "pirate_loot": "A screenshot of the pirate cost and odds table.",
-            "sigil_list": "A screenshot of Lux's sigil collection.",
-            "gem_guide": "A link with a guide for how to prioritize tool socketing upgrades.",
-            "cammy": "Replies with an image of Cammy.",
-            "help": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
-        }
-
         payload = command["payload"]
         username = player["username"]
 
+        chat_commands = Chat.dispatcher(ws, player, command, getter=True)
+
         if payload is None:
             help_string = "Command List"
-            for com in help_strings:
+            for com in chat_commands:
                 help_string += f" | {com}"
 
             Chat.send_chat_message(ws, help_string)
             return False, "Success"
+        else:
+            error_reply = {
+                "help_string": f"Sorry {username}, {payload} is not a valid LuxBot command."
+            }
 
-        if payload not in help_strings:
-            help_string = f"Sorry {username}, {payload} is not a valid LuxBot command."
-            Chat.send_chat_message(ws, help_string)
-            return False, "Success"
+            requested_command = chat_commands.get(payload, error_reply)
 
-        help_string = help_strings[payload]
+            help_string = requested_command["help_string"]
+
         Chat.send_chat_message(ws, help_string)
         return False, "Success"
