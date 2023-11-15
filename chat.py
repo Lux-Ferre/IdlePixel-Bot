@@ -1,5 +1,5 @@
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from utils import Db, Utils
 
@@ -272,32 +272,32 @@ class Chat:
             },
             "dho_maps": {
                 "command": Chat.dho_maps,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with the solutions to the Offline treasure maps."
             },
             "vega": {
                 "command": Chat.vega,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a <random> photo of Vega. [!luxbot:vega <opt:title>]",
             },
             "wiki": {
                 "command": Chat.wiki,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a link to the wiki (links are case sensitive.) [!luxbot:wiki <opt:page_title>]",
             },
             "bear": {
                 "command": Chat.bear,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a <random> photo of Bear. [!luxbot:bear <opt:title>]",
             },
             "pet": {
                 "command": Chat.pet,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a random photo from the pets database. [!luxbot:pet <opt:pet_name>]",
             },
             "pet_stats": {
                 "command": Chat.pet_stats,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a pastebin link containing info about the pets database.",
             },
             "amy_noobs": {
@@ -317,12 +317,12 @@ class Chat:
             },
             "chat_stats": {
                 "command": Chat.chat_stats,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a pastebin link containing various chat statistics.",
             },
             "pirate_loot": {
                 "command": Chat.pirate_loot,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "A screenshot of the pirate cost and odds table.",
             },
             "sigil_list": {
@@ -332,7 +332,7 @@ class Chat:
             },
             "gem_guide": {
                 "command": Chat.gem_guide,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "A link with a guide for how to prioritize tool socketing upgrades.",
             },
             "cammy": {
@@ -342,7 +342,7 @@ class Chat:
             },
             "help": {
                 "command": Chat.help,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a list of chat commands or info on a specific command. [!luxbot:help <opt:command>]",
             },
         }
@@ -354,16 +354,26 @@ class Chat:
         requested_command_data = dispatch_map.get(request, None)
 
         if requested_command_data is None:
-            return True, "Invalid LuxBot command issued."
+            return True, "Invalid LuxBot command issued.", ""
 
         if player["perm"] >= requested_command_data["permission"]:
-            dispatched_command = requested_command_data["command"]
+            last_command = command["last_time"]
+            current_time = datetime.now()
+            cooldown_length = timedelta(minutes=1)
+            elapsed_time = current_time - last_command
+
+            if elapsed_time > cooldown_length or player["perm"] > 0:
+                dispatched_command = requested_command_data["command"]
+            else:
+                print(f"{elapsed_time} < {cooldown_length}")
+                return False, "Cooldown", last_command
+
         else:
-            return True, f"{player['username']} permission level too low to use {command['sub_command']}."
+            return True, f"{player['username']} permission level too low to use {command['sub_command']}.", ""
 
         errored, msg = dispatched_command(ws, player, command)
 
-        return errored, msg
+        return errored, msg, current_time
 
     @staticmethod
     def echo(ws, player: dict, command: dict):

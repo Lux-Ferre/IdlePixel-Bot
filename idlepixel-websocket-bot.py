@@ -291,6 +291,8 @@ def handle_automod(player: dict, message: str):
             Chat.send_chat_message(ws, random.choice(automod_replies))
             return {"contains_slur": True}
 
+    return {"contains_slur": False}
+
 
 def on_yell(message: str):
     """
@@ -431,16 +433,19 @@ def handle_chat_command(player: dict, message: str):
     command = Chat.generate_command(message)
 
     if command["command"] == "!luxbot":
-        if player["perm"] >= 1:
+        if player["perm"] >= 0:
             if command["sub_command"] is None:
                 reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command format."
                 reply_needed = True
             else:
-                errored, msg = Chat.dispatcher(ws, player, command)
+                command["last_time"] = global_vars_instance.last_chat_command_time
+                errored, msg, new_command_time = Chat.dispatcher(ws, player, command)
                 if errored:
                     print(msg)
                     reply_string = f"Sorry {player['username']}, that is an invalid LuxBot command, or you do not have high enough permissions."
                     reply_needed = True
+                else:
+                    global_vars_instance.last_chat_command_time = new_command_time
         elif player["perm"] < 1:
             pass
         else:
@@ -648,6 +653,7 @@ if __name__ == "__main__":
         last_event_end_time: datetime = None
         event_countdown_started: bool = False
         raw_event_scores: str = ""
+        last_chat_command_time: datetime = datetime.min
 
     global_vars_instance = GlobalizedVars(item_data={}, chat_history=deque([], 5))
 
