@@ -1,4 +1,5 @@
 import random
+import re
 from datetime import datetime, timedelta
 
 from utils import Db, Utils
@@ -340,6 +341,11 @@ class Chat:
                 "permission": 1,
                 "help_string": "Replies with an image of Cammy.",
             },
+            "better_calc": {
+                "command": Chat.better_calc,
+                "permission": 1,
+                "help_string": "Does basic arithmetical operations.",
+            },
             "help": {
                 "command": Chat.help,
                 "permission": 0,
@@ -629,6 +635,55 @@ class Chat:
     @staticmethod
     def cammyrock(ws, player: dict, command: dict):
         reply_string = f"{player['username'].capitalize()}, here is a photo of Clammy Rock at a party: https://prnt.sc/CibZHdTWns3G"
+        Chat.send_chat_message(ws, reply_string)
+        return False, "Success"
+
+    @staticmethod
+    def better_calc(ws, player: dict, command: dict):
+        def parse_input(raw_input: str) -> list:
+            pattern = re.compile(r"([+/*-])")
+            input_with_spaces = re.sub(pattern, r" \1 ", raw_input)
+
+            input_list = input_with_spaces.split()
+
+            def is_floatable(n):
+                n = n.replace(".", "", 1)
+                return n.isnumeric()
+
+            converted_list = [float(value) if is_floatable(value) else value for value in input_list]
+
+            for value in converted_list:
+                if not (isinstance(value, float) or re.search(pattern, value)):
+                    raise ValueError
+
+            return converted_list
+
+        if command['payload'] is not None:
+            input_string = command["payload"]
+        else:
+            return True, "Invalid input"
+
+        calculation_map = {
+            "*": (lambda a, b: a * b),
+            "/": (lambda a, b: a / b),
+            "+": (lambda a, b: a + b),
+            "-": (lambda a, b: a - b),
+        }
+
+        parsed_list = parse_input(input_string)
+
+        if len(parsed_list) % 2 == 0:
+            return True, "Invalid input"
+
+        for operator, func in calculation_map.items():
+            while operator in parsed_list:
+                op_index = parsed_list.index(operator)
+                new_value = func(parsed_list[op_index - 1], parsed_list[op_index + 1])
+
+                parsed_list[op_index - 1] = new_value
+                del parsed_list[op_index:op_index + 2]
+
+        reply_string = f"{player['username'].capitalize()}, here is the result: {parsed_list[0]}"
         Chat.send_chat_message(ws, reply_string)
         return False, "Success"
 
