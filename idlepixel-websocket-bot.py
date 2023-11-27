@@ -225,10 +225,11 @@ def on_chat(data: str):
     if trigger_found:
         Chat.get_chat_stat(ws, player, message.lower())
 
-    now = datetime.now()
-    current_time = now.strftime("%H:%M")
+    current_time = datetime.now(timezone.utc)
+    timestamp = int(current_time.timestamp())
+    timestamp_string = f"<t:{timestamp}:t>"
 
-    formatted_chat = f'*[{current_time}]* **{player["username"]}:** {message} '
+    formatted_chat = f'*[{timestamp_string}]* **{player["username"]}:** {message} '
 
     if automod_response["contains_slur"]:
         print(f"Slur detected, full message: {message}")
@@ -306,9 +307,10 @@ def on_yell(message: str):
     :return:
     """
 
-    now = datetime.now()
-    current_time = now.strftime("%H:%M")
-    formatted_chat = f'*[{current_time}]* **SERVER MESSAGE:** {message} '
+    current_time = datetime.now(timezone.utc)
+    timestamp = int(current_time.timestamp())
+    timestamp_string = f"<t:{timestamp}:t>"
+    formatted_chat = f'*[{timestamp_string}]* **SERVER MESSAGE:** {message} '
 
     log_message(formatted_chat)
 
