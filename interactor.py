@@ -270,10 +270,10 @@ class Interactor:
             trigger_list = Db.read_config_row("automod_flag_words")
             Utils.send_custom_message(ws, player, f"Interactor:trigger_list:{trigger_list}")
         elif content == "permissions":
-            query = f"SELECT * FROM permissions"
+            query = f"SELECT * FROM permissions WHERE level != -2"
             params = tuple()
             perms_list = Db.fetch_db(query, params, True)
             perms_string = f"{perms_list}"
-            wrapped_message = textwrap.wrap(perms_string, 230)
+            wrapped_message = textwrap.wrap(perms_string, 200)
             for message in wrapped_message:
                 Utils.send_custom_message(ws, player, f"Interactor:perm_list:{message}")
