@@ -2,3 +2,5 @@
 ./.idea/*
 ./.fleet/*
 ./__pycache__/*
+
+ignore_me.py
