@@ -36,7 +36,7 @@ class Interactor:
             "relay": {
                 "permission": 2,
                 "command": Interactor.relay,
-                "help_string": "Passes on message to another account. (relay:account:message)"
+                "help_string": "Passes on message to another account. (relay:recipient;message)"
             },
             "triggers": {
                 "permission": 2,
@@ -118,8 +118,9 @@ class Interactor:
     @staticmethod
     def relay(ws, command: dict):
         content = command["content"]
-        recipient = content.split(":")[0]
-        message = content.split(":")[1]
+        split_content = content.split(";", 1)
+        recipient = split_content[0]
+        message = split_content[1]
         Utils.send_custom_message(ws, recipient, message)
 
     @staticmethod
