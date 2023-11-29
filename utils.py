@@ -119,7 +119,7 @@ class Utils:
         return response.text
 
     @staticmethod
-    def send_custom_message(ws, player: str, content: str, callback_id: str = "IPP111"):
+    def send_custom_message(ws, player: str, content: str, callback_id: str = "IPP0"):
         custom_string = f"CUSTOM={player}~{callback_id}:{content}"
         ws.send(f"{custom_string}")
 

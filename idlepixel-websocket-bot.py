@@ -314,7 +314,13 @@ def on_yell(message: str):
 
     log_message(formatted_chat)
 
-    yell_dict = {"type": "", "player": message.split(" ")[0]}
+    player_name, message_string = message.split(" ", 1)
+
+    yell_dict = {
+        "type": "",
+        "player": player_name,
+        "message": message_string
+    }
 
     if "agrodon" in message.lower():
         Chat.send_chat_message(ws, "Wizard hax!")
@@ -339,6 +345,8 @@ def on_yell(message: str):
         yell_dict["type"] = "elite_achievement"
     elif "gold armour" in message:
         yell_dict["type"] = "gold_armour"
+    elif "lost 1-Life Hardcore status" in message:
+        yell_dict["type"] = "one_life_death"
     else:
         yell_dict["type"] = "unknown"
 

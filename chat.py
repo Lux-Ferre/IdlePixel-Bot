@@ -156,6 +156,8 @@ class Chat:
                 current_stats["elite_achievements"] += 1
             case "gold_armour":
                 current_stats["gold_armour"] += 1
+            case "one_life_death":
+                current_stats["oneLifeDeaths"] += 1
             case _:
                 pass
 
