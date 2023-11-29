@@ -158,10 +158,26 @@ class Chat:
                 current_stats["gold_armour"] += 1
             case "one_life_death":
                 current_stats["oneLifeDeaths"] += 1
+                Chat.track_one_life_deaths(yell_dict)
             case _:
                 pass
 
         Db.set_config_row("chat_stats", current_stats)
+
+    @staticmethod
+    def track_one_life_deaths(yell_dict: dict):
+        message = yell_dict["message"]
+
+        mob_name = message.split("died to a ")[1].split(" and lost")[0]
+
+        current_stats = Db.read_config_row("one_life_killers")
+
+        if mob_name not in current_stats:
+            current_stats[mob_name] = 1
+        else:
+            current_stats[mob_name] += 1
+
+        Db.set_config_row("one_life_killers", current_stats)
 
     @staticmethod
     def get_chat_stat(ws, player: dict, message: str):
