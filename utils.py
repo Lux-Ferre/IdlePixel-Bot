@@ -101,6 +101,22 @@ class Db:
 
         #   Utils.send_custom_message(ws, player, f"LuxBot:update_permission:{updated_player} permission level set to {level}.")
 
+    @staticmethod
+    def set_cheaters_permissions(ws, player: str, player_list: list):
+        con = sqlite3.connect("configs.db")
+        cur = con.cursor()
+
+        query = """
+                        INSERT INTO permissions(user, level) VALUES(?1, ?2)
+                        ON CONFLICT(user) DO UPDATE SET level=?2
+                    """
+        for player in player_list:
+            params = (player, -2)
+            cur.execute(query, params)
+
+        con.commit()
+
+
 
 class Utils:
     @staticmethod

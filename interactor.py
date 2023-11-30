@@ -181,8 +181,7 @@ class Interactor:
         for data_point in data:
             cheater_list.append(data_point["name"])
 
-        for cheater in cheater_list:
-            Db.update_permission(ws, player, cheater, "-2")
+        Db.set_cheaters_permissions(ws, player, cheater_list)
 
         Utils.send_custom_message(ws, player, f"LuxBot:update_cheaters:All cheaters now given level -2 permissions.")
 
