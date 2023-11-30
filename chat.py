@@ -134,7 +134,7 @@ class Chat:
         Db.set_config_row("chat_stats", current_stats)
 
     @staticmethod
-    def track_yells(yell_dict: dict):
+    def track_yells(ws, yell_dict: dict):
         current_stats = Db.read_config_row("chat_stats")
 
         current_stats["total_yells"] += 1
@@ -158,14 +158,14 @@ class Chat:
                 current_stats["gold_armour"] += 1
             case "one_life_death":
                 current_stats["oneLifeDeaths"] += 1
-                Chat.track_one_life_deaths(yell_dict)
+                Chat.track_one_life_deaths(ws, yell_dict)
             case _:
                 pass
 
         Db.set_config_row("chat_stats", current_stats)
 
     @staticmethod
-    def track_one_life_deaths(yell_dict: dict):
+    def track_one_life_deaths(ws, yell_dict: dict):
         message = yell_dict["message"]
 
         mob_name = message.split("died to a ")[1].split(" and lost")[0]
@@ -178,6 +178,11 @@ class Chat:
             current_stats[mob_name] += 1
 
         Db.set_config_row("one_life_killers", current_stats)
+
+        if mob_name == "spider":
+            spider_kills = current_stats["spider"]
+            custom_string = f"spiderTaunt:spiderKill:{spider_kills}"
+            Utils.send_custom_message(ws, "a spider", custom_string)
 
     @staticmethod
     def get_chat_stat(ws, player: dict, message: str):

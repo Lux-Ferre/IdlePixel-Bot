@@ -132,7 +132,7 @@ def on_ws_message(ws, raw_message: str):
     elif message_type == "CHAT":
         on_chat(message_data)
     elif message_type == "YELL":
-        on_yell(message_data)
+        on_yell(ws, message_data)
     elif message_type == "CUSTOM":
         on_custom(message_data)
     elif message_type == "OPEN_DIALOGUE":
@@ -295,7 +295,7 @@ def handle_automod(player: dict, message: str):
     return {"contains_slur": False}
 
 
-def on_yell(message: str):
+def on_yell(ws, message: str):
     """
     Handler for ``YELL`` websocket frames (called server messages in chat.)
 
@@ -350,7 +350,7 @@ def on_yell(message: str):
     else:
         yell_dict["type"] = "unknown"
 
-    Chat.track_yells(yell_dict)
+    Chat.track_yells(ws, yell_dict)
 
 
 def on_dialogue(data: str):
