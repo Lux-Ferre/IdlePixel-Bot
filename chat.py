@@ -369,6 +369,11 @@ class Chat:
                 "permission": 1,
                 "help_string": "Does basic arithmetical operations.",
             },
+            "one_life": {
+                "command": Chat.one_life,
+                "permission": 1,
+                "help_string": "Replies with a pastebin link with current 1L death stats.",
+            },
             "help": {
                 "command": Chat.help,
                 "permission": 0,
@@ -709,6 +714,131 @@ class Chat:
         reply_string = f"{player['username'].capitalize()}, here is the result: {parsed_list[0]}"
         Chat.send_chat_message(ws, reply_string)
         return False, "Success"
+
+    @staticmethod
+    def one_life(ws, player: dict, command: dict):
+        enemy_info = {
+            "ent": {
+                "display": "Boss Ent",
+                "location": "Quest",
+                "kills": 0
+            },
+            "rat": {
+                "display": "Rat",
+                "location": "fields",
+                "kills": 0
+            },
+            "spider": {
+                "display": "Spider",
+                "location": "fields",
+                "kills": 0
+            },
+            "chicken": {
+                "display": "Chicken",
+                "location": "fields",
+                "kills": 0
+            },
+            "bee": {
+                "display": "Bee",
+                "location": "fields",
+                "kills": 0
+            },
+            "lizard": {
+                "display": "Lizard",
+                "location": "fields",
+                "kills": 0
+            },
+            "snake": {
+                "display": "Snake",
+                "location": "Forest",
+                "kills": 0
+            },
+            "ants": {
+                "display": "Ants",
+                "location": "Forest",
+                "kills": 0
+            },
+            "wolf": {
+                "display": "Wolf",
+                "location": "Forest",
+                "kills": 0
+            },
+            "thief": {
+                "display": "Thief",
+                "location": "Forest",
+                "kills": 0
+            },
+            "forest_ent": {
+                "display": "Ent",
+                "location": "Forest",
+                "kills": 0
+            },
+            "bear": {
+                "display": "Bear",
+                "location": "Caves",
+                "kills": 0
+            },
+            "goblin": {
+                "display": "Goblin",
+                "location": "Caves",
+                "kills": 0
+            },
+            "bat": {
+                "display": "Bat",
+                "location": "Caves",
+                "kills": 0
+            },
+            "skeleton": {
+                "display": "Skeleton",
+                "location": "Caves",
+                "kills": 0
+            },
+            "fire_snake": {
+                "display": "Fire Snake",
+                "location": "Volcano",
+                "kills": 0
+            },
+            "fire_hawk": {
+                "display": "Fire Hawk",
+                "location": "Volcano",
+                "kills": 0
+            },
+            "fire_golem": {
+                "display": "Fire Golem",
+                "location": "Volcano",
+                "kills": 0
+            },
+            "fire_witch": {
+                "display": "Fire Witch",
+                "location": "Volcano",
+                "kills": 0
+            },
+        }
+        one_life_total = Db.read_config_row("chat_stats")["oneLifeDeaths"]
+
+        one_life_killers = Db.read_config_row("one_life_killers")
+
+        for mob, kill_count in one_life_killers.items():
+            if mob in enemy_info:
+                enemy_info[mob]["kills"] = kill_count
+            else:
+                enemy_info[mob] = {
+                    "display": mob,
+                    "location": "Unknown",
+                    "kills": kill_count,
+                }
+
+        display_string = f"""Total One-life deaths: {one_life_total}\n\n\n"""
+
+        for mob, data in enemy_info.items():
+            new_line = f"{data['location']} - {data['display']}: {data['kills']}\n"
+            display_string += new_line
+
+        pastebin_url = Utils.dump_to_pastebin(display_string, "10M")
+
+        Chat.send_chat_message(ws, f"{player['username'].capitalize()}, here are the stats: {pastebin_url}")
+
+        return False, ""
 
     @staticmethod
     def help(ws, player: dict, command: dict):
