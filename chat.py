@@ -21,7 +21,8 @@ class Chat:
 
     @staticmethod
     def generate_command(raw_message: str) -> dict:
-        split_message = raw_message.split(" ", 1)
+        split_message = raw_message.split(" ", 1)       # !luxbot:command payload @message -> [!luxbot:command, payload @message]
+
         full_command = split_message[0]
         split_command = full_command.split(":", 1)
         primary_command = split_command[0].lower()
@@ -29,15 +30,22 @@ class Chat:
             sub_command = split_command[1].lower()
         else:
             sub_command = None
+
+        payload = None
+        at_message = None
+
         if len(split_message) > 1:
-            payload = split_message[1]
-        else:
-            payload = None
+            split_at = split_message[1].split("@", 1)
+            payload = split_at[0].strip()
+            if len(split_at) > 1:
+                at_message = split_at[1]
+
 
         command = {
             "command": primary_command,
             "sub_command": sub_command,
             "payload": payload,
+            "at_message": at_message,
         }
 
         return command
@@ -371,7 +379,7 @@ class Chat:
             },
             "one_life": {
                 "command": Chat.one_life,
-                "permission": 1,
+                "permission": 0,
                 "help_string": "Replies with a pastebin link with current 1L death stats.",
             },
             "help": {
@@ -828,9 +836,14 @@ class Chat:
                     "kills": kill_count,
                 }
 
-        display_string = f"""Total One-life deaths: {one_life_total}\n\n\n"""
+        display_string = f"""Total One-life deaths: {one_life_total}\n====================="""
+
+        current_area = ""
 
         for mob, data in enemy_info.items():
+            if data['location'] != current_area:
+                display_string += "\n"
+            current_area = data['location']
             new_line = f"{data['location']} - {data['display']}: {data['kills']}\n"
             display_string += new_line
 
