@@ -587,7 +587,11 @@ def log_message(message: str):
         with open('chat.log', 'a', encoding="utf-8") as the_file:
             the_file.write(message + '\n')
     else:
-        dh_webhook.send(content=message, allowed_mentions=discord.AllowedMentions.none())
+        message = message.replace("@mods", "<@&291724449340719104>", 1)
+        allowed = discord.AllowedMentions(everyone=False, users=False,
+                                          roles=[discord.Object(id="291724449340719104", type=discord.Role)])
+
+        dh_webhook.send(content=message, allowed_mentions=allowed)
 
 
 def start_event_countdown(event_timer: int, event_type: str):
