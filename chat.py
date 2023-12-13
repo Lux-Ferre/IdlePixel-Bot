@@ -380,7 +380,7 @@ class Chat:
             "one_life": {
                 "command": Chat.one_life,
                 "permission": 0,
-                "help_string": "Replies with a pastebin link with current 1L death stats.",
+                "help_string": "Replies with a pastebin link with current 1L death stats. Sorts by 'area' or 'kills'. [!luxbot:help <opt:sort>]",
             },
             "help": {
                 "command": Chat.help,
@@ -725,35 +725,37 @@ class Chat:
 
     @staticmethod
     def one_life(ws, player: dict, command: dict):
+        sort_type = command.get("payload", "area")      # If payload exists, use it as sort, else use area
+
         enemy_info = {
             "ent": {
                 "display": "Boss Ent",
-                "location": "Quest",
+                "location": "Special",
                 "kills": 0
             },
             "rat": {
                 "display": "Rat",
-                "location": "fields",
+                "location": "Fields",
                 "kills": 0
             },
             "spider": {
                 "display": "Spider",
-                "location": "fields",
+                "location": "Fields",
                 "kills": 0
             },
             "chicken": {
                 "display": "Chicken",
-                "location": "fields",
+                "location": "Fields",
                 "kills": 0
             },
             "bee": {
                 "display": "Bee",
-                "location": "fields",
+                "location": "Fields",
                 "kills": 0
             },
             "lizard": {
                 "display": "Lizard",
-                "location": "fields",
+                "location": "Fields",
                 "kills": 0
             },
             "snake": {
@@ -822,6 +824,7 @@ class Chat:
                 "kills": 0
             },
         }
+
         one_life_total = Db.read_config_row("chat_stats")["oneLifeDeaths"]
 
         one_life_killers = Db.read_config_row("one_life_killers")
@@ -836,12 +839,23 @@ class Chat:
                     "kills": kill_count,
                 }
 
+        if sort_type == "kills":
+            new_enemy_info = {}
+            enemy_info_list = sorted(enemy_info.items(), key=lambda k_v: k_v[1]['kills'], reverse=True)
+            for data_point in enemy_info_list:
+                new_enemy_info[data_point[0]] = data_point[1]
+
+            enemy_info = new_enemy_info
+
         display_string = f"""Total One-life deaths: {one_life_total}\n====================="""
+
+        if sort_type != "area":
+            display_string += "\n"
 
         current_area = ""
 
         for mob, data in enemy_info.items():
-            if data['location'] != current_area:
+            if data['location'] != current_area and sort_type=="area":
                 display_string += "\n"
             current_area = data['location']
             new_line = f"{data['location']} - {data['display']}: {data['kills']}\n"
