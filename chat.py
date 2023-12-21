@@ -21,7 +21,7 @@ class Chat:
 
     @staticmethod
     def generate_command(raw_message: str) -> dict:
-        split_message = raw_message.split(" ", 1)       # !luxbot:command payload @message -> [!luxbot:command, payload @message]
+        split_message = raw_message.split(" ", 1)       # !luxbot:command payload @message -> ['!luxbot:command', 'payload @message']
 
         full_command = split_message[0]
         split_command = full_command.split(":", 1)
@@ -37,6 +37,8 @@ class Chat:
         if len(split_message) > 1:
             split_at = split_message[1].split("@", 1)
             payload = split_at[0].strip()
+            if payload == "":       # Handle case of message and no payload
+                payload = None
             if len(split_at) > 1:
                 at_message = split_at[1]
 
@@ -725,7 +727,9 @@ class Chat:
 
     @staticmethod
     def one_life(ws, player: dict, command: dict):
-        sort_type = command.get("payload", "area")      # If payload exists, use it as sort, else use area
+        sort_type = command["payload"]
+        if command["payload"] is None:
+            sort_type = "area"
 
         enemy_info = {
             "ent": {
@@ -821,6 +825,26 @@ class Chat:
             "fire_witch": {
                 "display": "Fire Witch",
                 "location": "Volcano",
+                "kills": 0
+            },
+            "ice_hawk": {
+                "display": "Ice Hawk",
+                "location": "Northern Fields",
+                "kills": 0
+            },
+            "ice_golem": {
+                "display": "Ice Golem",
+                "location": "Northern Fields",
+                "kills": 0
+            },
+            "yeti": {
+                "display": "Yeti",
+                "location": "Northern Fields",
+                "kills": 0
+            },
+            "ice_witch": {
+                "display": "Ice Witch",
+                "location": "Northern Fields",
                 "kills": 0
             },
         }
