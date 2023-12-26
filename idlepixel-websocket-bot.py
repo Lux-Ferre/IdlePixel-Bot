@@ -245,7 +245,7 @@ def on_chat(data: str):
     elif len(message) > 4 and message[:5] == "@mods":
         note = message[5:]
         mod_call = f"{player['username']} is calling for a mod with note: {note}"
-        send_modmod_message(payload=mod_call, player="ALL", command="MSG")
+        send_modmod_message(payload=mod_call, player="ALL", command="at")
 
 
 def handle_automod(player: dict, message: str):
@@ -284,7 +284,7 @@ def handle_automod(player: dict, message: str):
                         }
 
             message_string = f"**{player['username']} has been muted for using the word: {trigger}**"
-            send_modmod_message(payload=message_string, command="MSG", player="ALL")
+            send_modmod_message(payload=message_string, command="automod", player="ALL")
             length = "24"
             reason = f'Using the word: {trigger}: "{message}"'
             is_ip = "false"
@@ -473,8 +473,7 @@ def handle_player_offline(player: str):
             online_mods.remove(player)
         except ValueError:
             pass
-        send_modmod_message(payload=f"{player} has logged out!", command="MSG", player="ALL")
-        send_modmod_message(payload=f"remove:{player}", command="LIST", player="ALL")
+        send_modmod_message(payload=f"{player}", command="logout", player="ALL")
 
 
 def poll_online_mods():
@@ -531,24 +530,15 @@ def handle_modmod(player: str, command: str, content: str, callback_id: str):
     online_mods.add(player)
     if command == "HELLO":
         if content == "1:0":
-            send_modmod_message(payload=f"{player} has logged in!", command="MSG", player="ALL")
-            send_modmod_message(payload=f"add:{player}", command="LIST", player="ALL")
+            send_modmod_message(payload=f"{player}", command="login", player="ALL")
             mod_string = ""
             for mod in online_mods:
                 mod_string += f"{mod},"
-            send_modmod_message(payload=f"list:{mod_string[:-1]}", command="LIST", player=player)
+            send_modmod_message(payload=f"{mod_string[:-1]}", command="list", player=player)
         elif content == "0:0":
             pass
     elif command == "MODCHAT":
-        send_modmod_message(payload=f"{player}: {content}", command="MSG", player="ALL")
-    elif command == "MODLIST":
-        mod_string = "Mod accounts online at last poll"
-        for mod in online_mods:
-            capital_mod = ""
-            for word in mod.split(" "):
-                capital_mod += f"{word.capitalize()} "
-            mod_string += f" | {capital_mod}"
-        send_modmod_message(payload=mod_string, command="MSG", player=player)
+        send_modmod_message(payload=f"{player}: {content}", command="message", player="ALL")
 
 
 def handle_chathist(player: str, command: str, content: str, callback_id: str):
@@ -571,7 +561,7 @@ def send_modmod_message(**kwargs):
     payload = kwargs.get("payload", None)
     command = kwargs.get("command", None)
     player = kwargs.get("player", None)
-    message = f"MODMOD:{command}:{payload}"
+    message = f"ModMod:{command}:{payload}"
     if player == "ALL":
         for account in online_mods.copy():
             Utils.send_custom_message(ws, account, message)
