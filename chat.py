@@ -1,5 +1,6 @@
 import random
 import re
+import json
 from datetime import datetime, timedelta
 
 from utils import Db, Utils
@@ -731,123 +732,8 @@ class Chat:
         if command["payload"] is None:
             sort_type = "area"
 
-        enemy_info = {
-            "ent": {
-                "display": "Boss Ent",
-                "location": "Special",
-                "kills": 0
-            },
-            "rat": {
-                "display": "Rat",
-                "location": "Fields",
-                "kills": 0
-            },
-            "spider": {
-                "display": "Spider",
-                "location": "Fields",
-                "kills": 0
-            },
-            "chicken": {
-                "display": "Chicken",
-                "location": "Fields",
-                "kills": 0
-            },
-            "bee": {
-                "display": "Bee",
-                "location": "Fields",
-                "kills": 0
-            },
-            "lizard": {
-                "display": "Lizard",
-                "location": "Fields",
-                "kills": 0
-            },
-            "snake": {
-                "display": "Snake",
-                "location": "Forest",
-                "kills": 0
-            },
-            "ants": {
-                "display": "Ants",
-                "location": "Forest",
-                "kills": 0
-            },
-            "wolf": {
-                "display": "Wolf",
-                "location": "Forest",
-                "kills": 0
-            },
-            "thief": {
-                "display": "Thief",
-                "location": "Forest",
-                "kills": 0
-            },
-            "forest_ent": {
-                "display": "Ent",
-                "location": "Forest",
-                "kills": 0
-            },
-            "bear": {
-                "display": "Bear",
-                "location": "Caves",
-                "kills": 0
-            },
-            "goblin": {
-                "display": "Goblin",
-                "location": "Caves",
-                "kills": 0
-            },
-            "bat": {
-                "display": "Bat",
-                "location": "Caves",
-                "kills": 0
-            },
-            "skeleton": {
-                "display": "Skeleton",
-                "location": "Caves",
-                "kills": 0
-            },
-            "fire_snake": {
-                "display": "Fire Snake",
-                "location": "Volcano",
-                "kills": 0
-            },
-            "fire_hawk": {
-                "display": "Fire Hawk",
-                "location": "Volcano",
-                "kills": 0
-            },
-            "fire_golem": {
-                "display": "Fire Golem",
-                "location": "Volcano",
-                "kills": 0
-            },
-            "fire_witch": {
-                "display": "Fire Witch",
-                "location": "Volcano",
-                "kills": 0
-            },
-            "ice_hawk": {
-                "display": "Ice Hawk",
-                "location": "Northern Fields",
-                "kills": 0
-            },
-            "ice_golem": {
-                "display": "Ice Golem",
-                "location": "Northern Fields",
-                "kills": 0
-            },
-            "yeti": {
-                "display": "Yeti",
-                "location": "Northern Fields",
-                "kills": 0
-            },
-            "ice_witch": {
-                "display": "Ice Witch",
-                "location": "Northern Fields",
-                "kills": 0
-            },
-        }
+        with open("assets/mob_info.json") as json_file:
+            enemy_info = json.load(json_file)
 
         one_life_total = Db.read_config_row("chat_stats")["oneLifeDeaths"]
 
