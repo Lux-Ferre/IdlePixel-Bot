@@ -4,6 +4,11 @@
         "location": "Special",
         "kills": 0
     },
+    "evil_pirate": {
+        "display": "Evil Pirate",
+        "location": "Special",
+        "kills": 0
+    },
     "rat": {
         "display": "Rat",
         "location": "Fields",
@@ -112,6 +117,176 @@
     "ice_witch": {
         "display": "Ice Witch",
         "location": "Northern Fields",
+        "kills": 0
+    },
+    "ghost": {
+        "display": "Ghost",
+        "location": "Haunted Mansion",
+        "kills": 0
+    },
+    "exorcist": {
+        "display": "Exorcist",
+        "location": "Haunted Mansion",
+        "kills": 0
+    },
+    "grandma": {
+        "display": "Grandma",
+        "location": "Haunted Mansion",
+        "kills": 0
+    },
+    "reaper": {
+        "display": "Reaper",
+        "location": "Haunted Mansion",
+        "kills": 0
+    },
+    "shark": {
+        "display": "Shark",
+        "location": "Beach",
+        "kills": 0
+    },
+    "sea_soldier": {
+        "display": "Sea Soldier",
+        "location": "Beach",
+        "kills": 0
+    },
+    "puffer_fish": {
+        "display": "Pufferfish",
+        "location": "Beach",
+        "kills": 0
+    },
+    "saltwater_crocodile": {
+        "display": "Crocodile",
+        "location": "Beach",
+        "kills": 0
+    },
+    "blood_rat": {
+        "display": "Blood Rat",
+        "location": "Blood Fields",
+        "kills": 0
+    },
+    "blood_spider": {
+        "display": "Blood Spider",
+        "location": "Blood Fields",
+        "kills": 0
+    },
+    "blood_chicken": {
+        "display": "Blood Chicken",
+        "location": "Blood Fields",
+        "kills": 0
+    },
+    "blood_bee": {
+        "display": "Blood Bee",
+        "location": "Blood Fields",
+        "kills": 0
+    },
+    "blood_lizard": {
+        "display": "Blood Lizard",
+        "location": "Blood Fields",
+        "kills": 0
+    },
+    "blood_snake": {
+        "display": "Blood Snake",
+        "location": "Blood Forest",
+        "kills": 0
+    },
+    "blood_ants": {
+        "display": "Blood Ants",
+        "location": "Blood Forest",
+        "kills": 0
+    },
+    "blood_wolf": {
+        "display": "Blood Wolf",
+        "location": "Blood Forest",
+        "kills": 0
+    },
+    "blood_thief": {
+        "display": "Blood Thief",
+        "location": "Blood Forest",
+        "kills": 0
+    },
+    "blood_forest_ent": {
+        "display": "Blood Ent",
+        "location": "Blood Forest",
+        "kills": 0
+    },
+    "blood_bear": {
+        "display": "Blood Bear",
+        "location": "Blood Caves",
+        "kills": 0
+    },
+    "blood_goblin": {
+        "display": "Blood Goblin",
+        "location": "Blood Caves",
+        "kills": 0
+    },
+    "blood_bat": {
+        "display": "Blood Bat",
+        "location": "Blood Caves",
+        "kills": 0
+    },
+    "blood_skeleton": {
+        "display": "Blood Skeleton",
+        "location": "Blood Caves",
+        "kills": 0
+    },
+    "blood_fire_snake": {
+        "display": "Blood Fire Snake",
+        "location": "Blood Volcano",
+        "kills": 0
+    },
+    "blood_fire_hawk": {
+        "display": "Blood Fire Hawk",
+        "location": "Blood Volcano",
+        "kills": 0
+    },
+    "blood_fire_golem": {
+        "display": "Blood Fire Golem",
+        "location": "Blood Volcano",
+        "kills": 0
+    },
+    "blood_fire_witch": {
+        "display": "Blood Fire Witch",
+        "location": "Blood Volcano",
+        "kills": 0
+    },
+    "castle_yeti": {
+        "display": "Castle Yeti",
+        "location": "Castle",
+        "kills": 0
+    },
+    "castle_saltwater_crocodile": {
+        "display": "Castle Crocodile",
+        "location": "Castle",
+        "kills": 0
+    },
+    "castle_golem": {
+        "display": "Castle Golem",
+        "location": "Castle",
+        "kills": 0
+    },
+    "castle_ants": {
+        "display": "Castle Ants",
+        "location": "Castle",
+        "kills": 0
+    },
+    "guardian_one": {
+        "display": "Guardian One",
+        "location": "Guardians",
+        "kills": 0
+    },
+    "guardian_two": {
+        "display": "Guardian Two",
+        "location": "Guardians",
+        "kills": 0
+    },
+    "guardian_three": {
+        "display": "Guardian Three",
+        "location": "Guardians",
+        "kills": 0
+    },
+    "guardian_four": {
+        "display": "Guardian Four",
+        "location": "Guardians",
         "kills": 0
     }
 }
