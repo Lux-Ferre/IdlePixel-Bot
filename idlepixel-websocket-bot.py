@@ -539,6 +539,10 @@ def handle_modmod(player: str, command: str, content: str, callback_id: str):
             pass
     elif command == "MODCHAT":
         send_modmod_message(payload=f"{player}: {content}", command="message", player="ALL")
+    elif command == "context":
+        send_modmod_message(payload=content, command="context", player="ALL")
+    elif command == "automod":
+        send_modmod_message(payload=content, command="automod", player="ALL")
 
 
 def handle_chathist(player: str, command: str, content: str, callback_id: str):
