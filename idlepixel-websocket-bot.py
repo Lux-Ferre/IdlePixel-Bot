@@ -267,6 +267,9 @@ def handle_automod(player: dict, message: str):
         f"Buh-bye {player['username']}!",
         "𝔹 𝕆 ℕ 𝕂 !",
         f"{player['username']} is taking an enforced break from chat.",
+        f"( ◡̀_◡́)▬▬█",
+        f"ᕙ( ︡’︡ 益 ’︠)ง▬▬█",
+        f"█▬▬ ◟(`ﮧ´ ◟ )",
     ]
 
     automod_flag_words = flag_words_dict["word_list"].split(",")
